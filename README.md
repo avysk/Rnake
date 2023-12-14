@@ -7,7 +7,7 @@ This is a (minimal) snake game in Rust, just for fun and as as an exercise.
 To build you need `cargo`. Do the following:
 
 1. `cargo install cargo-vcpkg` -- once in a lifetime.
-2. Make sure that the environment variable `VCPKG_ROOT` points to the writable location and run `cargo vcpkg build`. As long as the vcpkg root survives, there is no need to repeat this step.
+2. Make sure that the environment variable `VCPKG_ROOT` points to a writable location and run `cargo vcpkg build`. As long as the vcpkg root survives, there is no need to repeat this step.
 3 `cargo build --release`, and the final (hopefully self-contained on all platforms) executable will be generated in `target/release` directory. This step should be repeated if Rust source code changes.
 
 ## Controls
