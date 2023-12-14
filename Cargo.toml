@@ -1,5 +1,5 @@
 [package]
-name = "Rnake"
+name = "rnake"
 version = "0.1.0"
 edition = "2021"
 
@@ -15,3 +15,6 @@ rev = "c869686"
 
 [package.metadata.vcpkg.target]
 x86_64-pc-windows-msvc = { triplet = "x64-windows-static-md" }
+[dependencies]
+anyhow = "1.0.75"
+rand = "0.8.5"
