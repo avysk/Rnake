@@ -1,3 +1,4 @@
+mod sound;
 mod world;
 use std::cmp::min;
 
@@ -7,6 +8,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
 
+use crate::sound::Sounds;
 use crate::world::{Thing, World, HEIGHT, WIDTH};
 
 const FRAME_DELTA: Uint64 = 60;
@@ -19,6 +21,8 @@ const WIN_HEIGHT: u32 = 600;
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
+    let audio_subsystem = sdl_context.audio().unwrap();
+    let sounds = Sounds::new(audio_subsystem);
 
     let window = video_subsystem
         .window("rnake", WIN_WIDTH, WIN_HEIGHT)
@@ -26,15 +30,24 @@ pub fn main() {
         .build()
         .unwrap();
 
-    let mut canvas = window.into_canvas().build().unwrap();
-
-    let mut w = World::init();
+    let mut w = World::init(sounds);
     let cell_width = (WIN_WIDTH as i32) / (WIDTH as i32);
     let cell_height = (WIN_HEIGHT as i32) / (HEIGHT as i32);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut next_frame: Uint64 = 0;
     let mut turned = false;
+
+    w.play("start");
+    sdl2::messagebox::show_simple_message_box(
+        sdl2::messagebox::MessageBoxFlag::INFORMATION,
+        "Start",
+        "Prepare to start the game",
+        Some(&window),
+    )
+    .expect("Should be able to show messagebox");
+
+    let mut canvas = window.into_canvas().build().unwrap();
     'running: loop {
         // process quit and turn the snake events
         for event in event_pump.poll_iter() {
@@ -137,12 +150,18 @@ pub fn main() {
 
         canvas.present();
 
-        next_frame += FRAME_DELTA;
+        next_frame = unsafe { SDL_GetTicks64() } + FRAME_DELTA;
         turned = false;
 
         if w.things.is_empty() {
             w.add_thing();
         }
     }
+    sdl2::messagebox::show_simple_message_box(
+        sdl2::messagebox::MessageBoxFlag::ERROR,
+        "Game over",
+        "Game over",
+        Some(canvas.window()),
+    )
+    .expect("Should be able to show messagebox");
 }
-

@@ -22,6 +22,10 @@ If the snake leaves the window or hits itself, the program exits.
 
 None.
 
+## Bugs
+
+If sound is not available, the game might crash.
+
 ## Future Plans
 
 - Tests.
