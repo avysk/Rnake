@@ -119,17 +119,20 @@ pub fn main() {
 
         // draw rest of the snake
         canvas.set_draw_color(Color::GRAY);
-        for (x, y) in &w.snake[1..] {
-            let r = Rect::new(
-                cell_width * (*x as i32),
-                cell_height * (*y as i32),
-                cell_width as u32,
-                cell_height as u32,
-            );
-            canvas
-                .fill_rect(r)
-                .expect("SDL error: cannot draw rectangle");
-        }
+        let body: &Vec<Rect> = &w.snake[1..]
+            .iter()
+            .map(|(x, y)| {
+                Rect::new(
+                    cell_width * (*x as i32),
+                    cell_height * (*y as i32),
+                    cell_width as u32,
+                    cell_height as u32,
+                )
+            })
+            .collect();
+        canvas
+            .fill_rects(body.as_slice())
+            .expect("SDL error: cannot draw rectangles");
 
         // Draw the things
         for (t, x, y) in &(w.things) {
