@@ -1,6 +1,8 @@
 use anyhow::{bail, Result};
 use rand::Rng;
 
+use crate::sound::Sounds;
+
 pub const WIDTH: usize = 45;
 pub const HEIGHT: usize = 45;
 
@@ -25,10 +27,11 @@ pub struct World {
     snake_dir: Direction,
     pub things: Vec<(Thing, usize, usize)>,
     grow: i32, // grow for this amount of turns; 0 means do not grow
+    sounds: Sounds,
 }
 
 impl World {
-    pub fn init() -> Self {
+    pub fn init(sounds: Sounds) -> Self {
         World {
             snake: vec![
                 (SNAKE_INIT_X, SNAKE_INIT_Y),
@@ -38,7 +41,11 @@ impl World {
             snake_dir: SNAKE_INIT_DIR,
             things: vec![],
             grow: 0,
+            sounds,
         }
+    }
+    pub fn play(&mut self, what: &str) {
+        self.sounds.play(what);
     }
     pub fn step(&mut self) -> Result<()> {
         let (mut next_x, mut next_y) = self.snake[0];
@@ -47,6 +54,7 @@ impl World {
                 if next_y > 0 {
                     next_y -= 1;
                 } else {
+                    self.sounds.play("wall");
                     bail!("Snake went out of the field")
                 }
             }
@@ -54,6 +62,7 @@ impl World {
                 if next_y < HEIGHT {
                     next_y += 1
                 } else {
+                    self.sounds.play("wall");
                     bail!("Snake went out of the field")
                 }
             }
@@ -61,6 +70,7 @@ impl World {
                 if next_x > 0 {
                     next_x -= 1;
                 } else {
+                    self.sounds.play("wall");
                     bail!("Snake went out of the field")
                 }
             }
@@ -68,6 +78,7 @@ impl World {
                 if next_x < WIDTH {
                     next_x += 1
                 } else {
+                    self.sounds.play("wall");
                     bail!("Snake went out of the field")
                 }
             }
@@ -79,7 +90,10 @@ impl World {
             .position(|x| x.1 == next_x && x.2 == next_y);
         if let Some(pos) = idx {
             match self.things[pos].0 {
-                Thing::Food => self.grow += 3,
+                Thing::Food => {
+                    self.grow += 3;
+                    self.sounds.play("food");
+                }
             };
             self.things.swap_remove(pos);
         }
@@ -95,6 +109,7 @@ impl World {
         }
         // Check if we hit snake
         if self.snake.contains(&(next_x, next_y)) {
+            self.sounds.play("boom");
             bail!("Hit the snake!");
         }
         self.snake.insert(0, (next_x, next_y));
@@ -135,4 +150,3 @@ impl World {
         }
     }
 }
-
