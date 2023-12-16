@@ -1,10 +1,17 @@
-use anyhow::{bail, Result};
 use rand::Rng;
-
-use crate::sound::Sounds;
 
 pub const WIDTH: usize = 45;
 pub const HEIGHT: usize = 45;
+
+pub enum StepError {
+    OutOfField,
+    SelfHit,
+}
+
+pub enum StepOk {
+    Nothing,
+    AteFood,
+}
 
 enum Direction {
     Up,
@@ -27,11 +34,10 @@ pub struct World {
     snake_dir: Direction,
     pub things: Vec<(Thing, usize, usize)>,
     grow: i32, // grow for this amount of turns; 0 means do not grow
-    sounds: Sounds,
 }
 
 impl World {
-    pub fn init(sounds: Sounds) -> Self {
+    pub fn init() -> Self {
         World {
             snake: vec![
                 (SNAKE_INIT_X, SNAKE_INIT_Y),
@@ -41,45 +47,39 @@ impl World {
             snake_dir: SNAKE_INIT_DIR,
             things: vec![],
             grow: 0,
-            sounds,
         }
     }
-    pub fn play(&mut self, what: &str) {
-        self.sounds.play(what);
-    }
-    pub fn step(&mut self) -> Result<()> {
+    pub fn step(&mut self) -> Result<StepOk, StepError> {
         let (mut next_x, mut next_y) = self.snake[0];
+        let mut step_ok = StepOk::Nothing;
+
         match self.snake_dir {
             Direction::Up => {
                 if next_y > 0 {
                     next_y -= 1;
                 } else {
-                    self.sounds.play("wall");
-                    bail!("Snake went out of the field")
+                    return Err(StepError::OutOfField);
                 }
             }
             Direction::Down => {
                 if next_y < HEIGHT {
                     next_y += 1
                 } else {
-                    self.sounds.play("wall");
-                    bail!("Snake went out of the field")
+                    return Err(StepError::OutOfField);
                 }
             }
             Direction::Right => {
                 if next_x > 0 {
                     next_x -= 1;
                 } else {
-                    self.sounds.play("wall");
-                    bail!("Snake went out of the field")
+                    return Err(StepError::OutOfField);
                 }
             }
             Direction::Left => {
                 if next_x < WIDTH {
                     next_x += 1
                 } else {
-                    self.sounds.play("wall");
-                    bail!("Snake went out of the field")
+                    return Err(StepError::OutOfField);
                 }
             }
         };
@@ -92,7 +92,7 @@ impl World {
             match self.things[pos].0 {
                 Thing::Food => {
                     self.grow += 3;
-                    self.sounds.play("food");
+                    step_ok = StepOk::AteFood;
                 }
             };
             self.things.swap_remove(pos);
@@ -109,11 +109,10 @@ impl World {
         }
         // Check if we hit snake
         if self.snake.contains(&(next_x, next_y)) {
-            self.sounds.play("boom");
-            bail!("Hit the snake!");
+            return Err(StepError::SelfHit);
         }
         self.snake.insert(0, (next_x, next_y));
-        Ok(())
+        Ok(step_ok)
     }
 
     pub fn turn_left(&mut self) {
