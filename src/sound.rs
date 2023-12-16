@@ -4,9 +4,20 @@ use sdl2::{
     AudioSubsystem,
 };
 
+pub trait Player {
+    fn play(&self, what: &str);
+}
+
+struct NoSound;
+
+impl Player for NoSound {
+    fn play(&self, _what: &str) {
+        // no sound, do nothing
+    }
+}
+
 #[repr(align(2))]
-pub struct Sounds {
-    system: AudioSubsystem,
+struct Sounds {
     boom: Vec<u8>,
     food: Vec<u8>,
     start: Vec<u8>,
@@ -14,36 +25,8 @@ pub struct Sounds {
     queue: Option<AudioQueue<i16>>,
 }
 
-impl Sounds {
-    pub fn new(system: AudioSubsystem) -> Self {
-        let boom = Vec::from(*include_bytes!("sounds/boom.wav"));
-        let food = Vec::from(*include_bytes!("sounds/food.wav"));
-        let start = Vec::from(*include_bytes!("sounds/start.wav"));
-        let wall = Vec::from(*include_bytes!("sounds/wall.wav"));
-        Self {
-            boom,
-            food,
-            system,
-            start,
-            wall,
-            queue: None,
-        }
-    }
-
-    pub fn play(&mut self, what: &str) {
-        let spec = AudioSpecDesired {
-            freq: None,
-            channels: Some(1u8),
-            samples: None,
-        };
-
-        if self.queue.is_none() {
-            self.queue = match self.system.open_queue::<i16, Option<&str>>(None, &spec) {
-                Ok(q) => Some(q),
-                _ => panic!("Failed to open audioqueue"),
-            };
-        }
-
+impl Player for Sounds {
+    fn play(&self, what: &str) {
         let data = match what {
             "boom" => &self.boom,
             "food" => &self.food,
@@ -55,6 +38,33 @@ impl Sounds {
         q.queue_audio(bytemuck::cast_slice::<u8, i16>(data.as_slice()))
             .expect("Should be able to queue audio");
         q.resume();
+    }
+}
+
+pub fn new_player(maybe_system: Result<AudioSubsystem, String>) -> Box<dyn Player> {
+    if let Ok(system) = maybe_system {
+        let spec = AudioSpecDesired {
+            freq: None,
+            channels: Some(1u8),
+            samples: None,
+        };
+        let queue = match system.open_queue::<i16, Option<&str>>(None, &spec) {
+            Ok(q) => Some(q),
+            _ => panic!("Failed to open audioqueue"),
+        };
+        let boom = Vec::from(*include_bytes!("sounds/boom.wav"));
+        let food = Vec::from(*include_bytes!("sounds/food.wav"));
+        let start = Vec::from(*include_bytes!("sounds/start.wav"));
+        let wall = Vec::from(*include_bytes!("sounds/wall.wav"));
+        Box::new(Sounds {
+            boom,
+            food,
+            start,
+            wall,
+            queue,
+        })
+    } else {
+        Box::new(NoSound {})
     }
 }
 
