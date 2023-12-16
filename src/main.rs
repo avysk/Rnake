@@ -22,14 +22,14 @@ const WIN_HEIGHT: u32 = 600;
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
-    let maybe_audio_subsystem = sdl_context.audio();
-    let sounds = new_player(maybe_audio_subsystem);
-
     let window = video_subsystem
-        .window("rnake", WIN_WIDTH, WIN_HEIGHT)
-        .position_centered()
+        .window("rnake", 0, 0)
+        .fullscreen_desktop()
         .build()
         .unwrap();
+
+    let maybe_audio_subsystem = sdl_context.audio();
+    let sounds = new_player(maybe_audio_subsystem);
 
     let mut w = World::init();
     let cell_width = (WIN_WIDTH as i32) / (WIDTH as i32);
