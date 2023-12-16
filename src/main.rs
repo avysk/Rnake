@@ -1,5 +1,6 @@
 mod sound;
 mod world;
+
 use std::cmp::min;
 
 use sdl2::event::Event;
@@ -7,9 +8,9 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
+use sound::new_player;
 
-use crate::sound::Sounds;
-use crate::world::{Thing, World, HEIGHT, WIDTH};
+use crate::world::{StepError, StepOk, Thing, World, HEIGHT, WIDTH};
 
 const FRAME_DELTA: Uint64 = 60;
 // update screen after the given number of SDL ticks
@@ -21,8 +22,8 @@ const WIN_HEIGHT: u32 = 600;
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
-    let audio_subsystem = sdl_context.audio().unwrap();
-    let sounds = Sounds::new(audio_subsystem);
+    let maybe_audio_subsystem = sdl_context.audio();
+    let sounds = new_player(maybe_audio_subsystem);
 
     let window = video_subsystem
         .window("rnake", WIN_WIDTH, WIN_HEIGHT)
@@ -30,7 +31,7 @@ pub fn main() {
         .build()
         .unwrap();
 
-    let mut w = World::init(sounds);
+    let mut w = World::init();
     let cell_width = (WIN_WIDTH as i32) / (WIDTH as i32);
     let cell_height = (WIN_HEIGHT as i32) / (HEIGHT as i32);
 
@@ -38,7 +39,7 @@ pub fn main() {
     let mut next_frame: Uint64 = 0;
     let mut turned = false;
 
-    w.play("start");
+    sounds.play("start");
     sdl2::messagebox::show_simple_message_box(
         sdl2::messagebox::MessageBoxFlag::INFORMATION,
         "Start",
@@ -93,8 +94,19 @@ pub fn main() {
         }
 
         // Advance
-        if w.step().is_err() {
-            break 'running;
+        match w.step() {
+            Err(StepError::OutOfField) => {
+                sounds.play("wall");
+                break 'running;
+            }
+            Err(StepError::SelfHit) => {
+                sounds.play("boom");
+                break 'running;
+            }
+            Ok(StepOk::AteFood) => {
+                sounds.play("food");
+            }
+            Ok(StepOk::Nothing) => {}
         }
 
         // Clear the field
@@ -119,17 +131,20 @@ pub fn main() {
 
         // draw rest of the snake
         canvas.set_draw_color(Color::GRAY);
-        for (x, y) in &w.snake[1..] {
-            let r = Rect::new(
-                cell_width * (*x as i32),
-                cell_height * (*y as i32),
-                cell_width as u32,
-                cell_height as u32,
-            );
-            canvas
-                .fill_rect(r)
-                .expect("SDL error: cannot draw rectangle");
-        }
+        let body: &Vec<Rect> = &w.snake[1..]
+            .iter()
+            .map(|(x, y)| {
+                Rect::new(
+                    cell_width * (*x as i32),
+                    cell_height * (*y as i32),
+                    cell_width as u32,
+                    cell_height as u32,
+                )
+            })
+            .collect();
+        canvas
+            .fill_rects(body.as_slice())
+            .expect("SDL error: cannot draw rectangles");
 
         // Draw the things
         for (t, x, y) in &(w.things) {
