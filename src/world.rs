@@ -1,7 +1,6 @@
 use rand::Rng;
 
-pub const WIDTH: usize = 45;
-pub const HEIGHT: usize = 45;
+pub const FIELD_SIZE: usize = 30;
 
 pub enum StepError {
     OutOfField,
@@ -13,15 +12,16 @@ pub enum StepOk {
     AteFood,
 }
 
+#[derive(Debug)]
 enum Direction {
     Up,
     Down,
-    Right,
     Left,
+    Right,
 }
 
-const SNAKE_INIT_X: usize = WIDTH / 2;
-const SNAKE_INIT_Y: usize = HEIGHT / 2;
+const SNAKE_INIT_X: usize = FIELD_SIZE / 2;
+const SNAKE_INIT_Y: usize = FIELD_SIZE / 2;
 const SNAKE_INIT_DIR: Direction = Direction::Up;
 
 #[derive(PartialEq)]
@@ -62,21 +62,21 @@ impl World {
                 }
             }
             Direction::Down => {
-                if next_y < HEIGHT {
+                if next_y < FIELD_SIZE - 1 {
                     next_y += 1
                 } else {
                     return Err(StepError::OutOfField);
                 }
             }
-            Direction::Right => {
+            Direction::Left => {
                 if next_x > 0 {
                     next_x -= 1;
                 } else {
                     return Err(StepError::OutOfField);
                 }
             }
-            Direction::Left => {
-                if next_x < WIDTH {
+            Direction::Right => {
+                if next_x < FIELD_SIZE - 1 {
                     next_x += 1
                 } else {
                     return Err(StepError::OutOfField);
@@ -117,27 +117,27 @@ impl World {
 
     pub fn turn_left(&mut self) {
         self.snake_dir = match self.snake_dir {
-            Direction::Down => Direction::Left,
-            Direction::Left => Direction::Up,
-            Direction::Up => Direction::Right,
-            Direction::Right => Direction::Down,
+            Direction::Down => Direction::Right,
+            Direction::Right => Direction::Up,
+            Direction::Up => Direction::Left,
+            Direction::Left => Direction::Down,
         };
     }
 
     pub fn turn_right(&mut self) {
         self.snake_dir = match self.snake_dir {
-            Direction::Down => Direction::Right,
-            Direction::Left => Direction::Down,
-            Direction::Up => Direction::Left,
-            Direction::Right => Direction::Up,
+            Direction::Down => Direction::Left,
+            Direction::Right => Direction::Down,
+            Direction::Up => Direction::Right,
+            Direction::Left => Direction::Up,
         };
     }
 
     pub fn add_thing(&mut self) {
         let mut rng = rand::thread_rng();
         loop {
-            let x = rng.gen_range(0..WIDTH);
-            let y = rng.gen_range(0..HEIGHT);
+            let x = rng.gen_range(0..FIELD_SIZE);
+            let y = rng.gen_range(0..FIELD_SIZE);
             if self.snake.contains(&(x, y)) {
                 continue;
             }

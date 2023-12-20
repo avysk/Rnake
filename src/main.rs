@@ -7,33 +7,81 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
+use sdl2::render::Canvas;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
-use sound::new_player;
+use sdl2::video::Window;
 
-use crate::world::{StepError, StepOk, Thing, World, HEIGHT, WIDTH};
+use sound::new_player;
+use world::{StepError, StepOk, Thing, World, FIELD_SIZE};
 
 const FRAME_DELTA: Uint64 = 60;
 // update screen after the given number of SDL ticks
 const WAIT: Uint64 = 20;
 
-const WIN_WIDTH: u32 = 600;
-const WIN_HEIGHT: u32 = 600;
+struct DrawRect {
+    border_x: u32,
+    border_y: u32,
+    cell: u32,
+    canvas: Canvas<Window>,
+}
+
+impl DrawRect {
+    fn new(field_size: &usize, window: Window) -> Self {
+        let window_size = window.size();
+        let canvas = window
+            .into_canvas()
+            .build()
+            .expect("Should be able to get window's canvas");
+        let square = min(window_size.0, window_size.1);
+        // 2 for the wall around the field
+        let field_plus_wall = *field_size as u32 + 2;
+        // we divide and multiply to round the things
+        let cell = square / field_plus_wall;
+        let border_x = (window_size.0 - cell * field_plus_wall) / 2;
+        let border_y = (window_size.1 - cell * field_plus_wall) / 2;
+
+        Self {
+            border_x,
+            border_y,
+            cell,
+            canvas,
+        }
+    }
+    fn rect(&mut self, x: &u32, y: &u32, c: &Color) {
+        let rx = self.border_x + self.cell * *x;
+        let ry = self.border_y + self.cell * *y;
+        let rect = Rect::new(rx as i32, ry as i32, self.cell, self.cell);
+        self.canvas.set_draw_color(*c);
+        self.canvas
+            .fill_rect(rect)
+            .expect("SDL error: cannot draw rectangle");
+    }
+    fn clear(&mut self) {
+        self.canvas.set_draw_color(Color::BLACK);
+        self.canvas.clear();
+    }
+    fn present(&mut self) {
+        self.canvas.present();
+    }
+    fn window(&self) -> Option<&Window> {
+        Some(self.canvas.window())
+    }
+}
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
+    let window = video_subsystem
+        .window("rnake", 0, 0)
+        .fullscreen_desktop()
+        .build()
+        .unwrap();
+    let mut draw = DrawRect::new(&FIELD_SIZE, window);
+
     let maybe_audio_subsystem = sdl_context.audio();
     let sounds = new_player(maybe_audio_subsystem);
 
-    let window = video_subsystem
-        .window("rnake", WIN_WIDTH, WIN_HEIGHT)
-        .position_centered()
-        .build()
-        .unwrap();
-
     let mut w = World::init();
-    let cell_width = (WIN_WIDTH as i32) / (WIDTH as i32);
-    let cell_height = (WIN_HEIGHT as i32) / (HEIGHT as i32);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut next_frame: Uint64 = 0;
@@ -44,11 +92,10 @@ pub fn main() {
         sdl2::messagebox::MessageBoxFlag::INFORMATION,
         "Start",
         "Prepare to start the game",
-        Some(&window),
+        draw.window(),
     )
     .expect("Should be able to show messagebox");
 
-    let mut canvas = window.into_canvas().build().unwrap();
     'running: loop {
         // process quit and turn the snake events
         for event in event_pump.poll_iter() {
@@ -109,61 +156,38 @@ pub fn main() {
             Ok(StepOk::Nothing) => {}
         }
 
-        // Clear the field
-        canvas.set_draw_color(Color::BLACK);
-        canvas.clear();
+        draw.clear();
+
+        // draw field border
+        for b in 0..=(FIELD_SIZE as u32 + 1) {
+            let wall = &Color::YELLOW;
+            draw.rect(&b, &0, wall);
+            draw.rect(&b, &(FIELD_SIZE as u32 + 1), wall);
+            draw.rect(&0, &b, wall);
+            draw.rect(&(FIELD_SIZE as u32 + 1), &b, wall);
+        }
 
         // draw the snake head
-        canvas.set_draw_color(Color::GREEN);
         let (hx, hy) = w
             .snake
             .first()
             .expect("Programming error: a snake cannot be empty");
-        let r = Rect::new(
-            cell_width * (*hx as i32),
-            cell_height * (*hy as i32),
-            cell_width as u32,
-            cell_height as u32,
-        );
-        canvas
-            .fill_rect(r)
-            .expect("SDL error: cannot draw rectangle");
+        draw.rect(&(*hx as u32 + 1), &(*hy as u32 + 1), &Color::GREEN);
 
         // draw rest of the snake
-        canvas.set_draw_color(Color::GRAY);
-        let body: &Vec<Rect> = &w.snake[1..]
-            .iter()
-            .map(|(x, y)| {
-                Rect::new(
-                    cell_width * (*x as i32),
-                    cell_height * (*y as i32),
-                    cell_width as u32,
-                    cell_height as u32,
-                )
-            })
-            .collect();
-        canvas
-            .fill_rects(body.as_slice())
-            .expect("SDL error: cannot draw rectangles");
+        for (bx, by) in &w.snake[1..] {
+            draw.rect(&(*bx as u32 + 1), &(*by as u32 + 1), &Color::GRAY);
+        }
 
         // Draw the things
         for (t, x, y) in &(w.things) {
-            let r = Rect::new(
-                cell_width * (*x as i32),
-                cell_height * (*y as i32),
-                cell_width as u32,
-                cell_height as u32,
-            );
             let c = match t {
                 Thing::Food => Color::BLUE,
             };
-            canvas.set_draw_color(c);
-            canvas
-                .fill_rect(r)
-                .expect("SDL error: cannot draw rectangle");
+            draw.rect(&(*x as u32 + 1), &(*y as u32 + 1), &c);
         }
 
-        canvas.present();
+        draw.present();
 
         next_frame = unsafe { SDL_GetTicks64() } + FRAME_DELTA;
         turned = false;
@@ -176,7 +200,7 @@ pub fn main() {
         sdl2::messagebox::MessageBoxFlag::ERROR,
         "Game over",
         "Game over",
-        Some(canvas.window()),
+        draw.window(),
     )
     .expect("Should be able to show messagebox");
 }
