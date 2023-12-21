@@ -16,6 +16,7 @@ macro_rules! rect {
 }
 
 // const MESSAGE_PADDING: u32 = 50;
+const LINE_INTERVAL: u32 = 10;
 
 pub struct SDLWrapper<'a> {
     // event pump
@@ -67,7 +68,7 @@ impl<'a> SDLWrapper<'a> {
         let rwops = RWops::from_bytes(include_bytes!("fonts/Aclonica.ttf"))
             .expect("Should be able to load rwops from font bytes.");
         let font = context
-            .load_font_from_rwops(rwops, 36)
+            .load_font_from_rwops(rwops, 72)
             .expect("Should be able to load font from rwops.");
 
         Self {
@@ -99,31 +100,37 @@ impl<'a> SDLWrapper<'a> {
     pub fn window(&self) -> Option<&Window> {
         Some(self.canvas.window())
     }
-    pub fn message(&mut self, msg: &str) {
+    pub fn messages(&mut self, msgs: Vec<&str>) {
         self.clear();
-        let surface = self
-            .font
-            .render(msg)
-            .solid(Color::BLUE)
-            .expect("Should be able to render message");
+        let surfaces = msgs.iter().map(|line| {
+            self.font
+                .render(line)
+                .solid(Color::BLUE)
+                .expect("Should be able to render text line")
+        });
         let creator = self.canvas.texture_creator();
-        let texture = creator
-            .create_texture_from_surface(surface)
-            .expect("Should be able to create texture from surface");
-        let TextureQuery { width, height, .. } = texture.query();
-
-        // TODO: check that we fit into the screen with the given padding
-
-        let s = self
+        let textures = surfaces.map(|surface| {
+            creator
+                .create_texture_from_surface(surface)
+                .expect("Should be able to create texture from surface")
+        });
+        let heights: u32 = textures.clone().map(|texture| texture.query().height).sum();
+        let total_height = heights + (msgs.len() as u32 - 1) * LINE_INTERVAL;
+        let (win_width, win_height) = self
             .window()
-            .expect("Should be able to get window corresponding to the canvas")
+            .expect("Should be able to get window corresponding to the texture")
             .size();
-        let msg_x = (s.0 - width) / 2;
-        let msg_y = (s.1 - height) / 2;
+        let mut pad_h = (win_height - total_height) / 2;
 
-        self.canvas
-            .copy(&texture, None, Some(rect!(msg_x, msg_y, width, height)))
-            .expect("Should be able to copy texture to canvas.");
+        for texture in textures {
+            let TextureQuery { width, height, .. } = texture.query();
+            let tgt = rect!((win_width - width) / 2, pad_h, width, height);
+            self.canvas
+                .copy(&texture, None, Some(tgt))
+                .expect("Should be able to copy texture to canvas.");
+            pad_h += height;
+            pad_h += LINE_INTERVAL;
+        }
         self.present();
     }
 }
