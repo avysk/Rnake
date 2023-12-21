@@ -1,13 +1,23 @@
 use std::cmp::min;
 
 use sdl2::rect::Rect;
-use sdl2::render::Canvas;
+use sdl2::render::{Canvas, TextureQuery};
+use sdl2::rwops::RWops;
+use sdl2::ttf::{Font, Sdl2TtfContext};
 use sdl2::video::Window;
 use sdl2::{pixels::Color, EventPump};
 
 use crate::sound::{Player, Sounds};
 
-pub struct SDLWrapper {
+macro_rules! rect {
+    ($x:expr, $y:expr, $w:expr, $h:expr) => {
+        Rect::new(($x) as i32, ($y) as i32, ($w) as u32, ($h) as u32)
+    };
+}
+
+// const MESSAGE_PADDING: u32 = 50;
+
+pub struct SDLWrapper<'a> {
     // event pump
     pub events: EventPump,
     // graphics
@@ -17,10 +27,12 @@ pub struct SDLWrapper {
     canvas: Canvas<Window>,
     // sound player
     pub sounds: Box<dyn Player>,
+    // text
+    font: Font<'a, 'static>,
 }
 
-impl SDLWrapper {
-    pub fn new(field_size: &usize) -> Self {
+impl<'a> SDLWrapper<'a> {
+    pub fn new(field_size: &u32, context: &'a Sdl2TtfContext) -> Self {
         let sdl_context = sdl2::init().expect("Should be able to get SDL context");
         // Events
         let events = sdl_context
@@ -41,7 +53,7 @@ impl SDLWrapper {
             .expect("Should be able to get window's canvas");
         let square = min(window_size.0, window_size.1);
         // 2 for the wall around the field
-        let field_plus_wall = *field_size as u32 + 2;
+        let field_plus_wall = *field_size + 2;
         // we divide and multiply to round the things
         let cell = square / field_plus_wall;
         let border_x = (window_size.0 - cell * field_plus_wall) / 2;
@@ -51,6 +63,13 @@ impl SDLWrapper {
         let maybe_audio_subsystem = sdl_context.audio();
         let sounds = Sounds::create(maybe_audio_subsystem);
 
+        // Fonts
+        let rwops = RWops::from_bytes(include_bytes!("fonts/Aclonica.ttf"))
+            .expect("Should be able to load rwops from font bytes.");
+        let font = context
+            .load_font_from_rwops(rwops, 36)
+            .expect("Should be able to load font from rwops.");
+
         Self {
             events,
             border_x,
@@ -58,12 +77,13 @@ impl SDLWrapper {
             cell,
             canvas,
             sounds,
+            font,
         }
     }
     pub fn rect(&mut self, x: &u32, y: &u32, c: &Color) {
         let rx = self.border_x + self.cell * *x;
         let ry = self.border_y + self.cell * *y;
-        let rect = Rect::new(rx as i32, ry as i32, self.cell, self.cell);
+        let rect = rect!(rx, ry, self.cell, self.cell);
         self.canvas.set_draw_color(*c);
         self.canvas
             .fill_rect(rect)
@@ -78,5 +98,32 @@ impl SDLWrapper {
     }
     pub fn window(&self) -> Option<&Window> {
         Some(self.canvas.window())
+    }
+    pub fn message(&mut self, msg: &str) {
+        self.clear();
+        let surface = self
+            .font
+            .render(msg)
+            .solid(Color::BLUE)
+            .expect("Should be able to render message");
+        let creator = self.canvas.texture_creator();
+        let texture = creator
+            .create_texture_from_surface(surface)
+            .expect("Should be able to create texture from surface");
+        let TextureQuery { width, height, .. } = texture.query();
+
+        // TODO: check that we fit into the screen with the given padding
+
+        let s = self
+            .window()
+            .expect("Should be able to get window corresponding to the canvas")
+            .size();
+        let msg_x = (s.0 - width) / 2;
+        let msg_y = (s.1 - height) / 2;
+
+        self.canvas
+            .copy(&texture, None, Some(rect!(msg_x, msg_y, width, height)))
+            .expect("Should be able to copy texture to canvas.");
+        self.present();
     }
 }
