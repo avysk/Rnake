@@ -20,31 +20,30 @@ pub fn main() {
     let ttf_context = sdl2::ttf::init().expect("Should be able to construct TTF context");
     let mut sdl = SDLWrapper::new(&FIELD_SIZE, &ttf_context);
 
+    sdl.sounds.start();
+    sdl.message("Press SPACE to start the game");
+    'waiting_start: loop {
+        for event in sdl.events.poll_iter() {
+            match event {
+                Event::KeyDown {
+                    keycode: Some(Keycode::Space),
+                    ..
+                } => {
+                    break 'waiting_start;
+                }
+                _ => unsafe {
+                    SDL_Delay(100);
+                },
+            }
+        }
+    }
+
     'game: loop {
         let mut w = World::init();
         let mut score: u32 = 0;
 
         let mut next_frame: Uint64 = 0;
         let mut turned = false;
-
-        sdl.sounds.start();
-
-        sdl.message("Press SPACE to start the game");
-        'waiting_start: loop {
-            for event in sdl.events.poll_iter() {
-                match event {
-                    Event::KeyDown {
-                        keycode: Some(Keycode::Space),
-                        ..
-                    } => {
-                        break 'waiting_start;
-                    }
-                    _ => unsafe {
-                        SDL_Delay(100);
-                    },
-                }
-            }
-        }
 
         'running: loop {
             // process quit and turn the snake events
@@ -161,9 +160,13 @@ pub fn main() {
                         keycode: Some(Keycode::Space),
                         ..
                     } => {
+                       sdl.sounds.start();
                         continue 'game;
                     }
-                    Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    Event::KeyDown {
+                        keycode: Some(Keycode::Escape),
+                        ..
+                    } => {
                         break 'game;
                     }
                     _ => unsafe {
