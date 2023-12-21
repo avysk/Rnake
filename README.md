@@ -25,9 +25,9 @@ None.
 ## Future Plans
 
 - Tests.
-- User-friendly message about the game end, plus the ability to start a new game.
-- Score.
+- Show score during the game.
 - Different types of things appearing in the field.
+- Support lifetime for things appearing in the field.
 - Replacement of hardcoded values with something configurable.
 - Better graphics.
 - Windows installer.
