@@ -1,6 +1,6 @@
 use rand::Rng;
 
-pub const FIELD_SIZE: usize = 30;
+pub const FIELD_SIZE: u32 = 30;
 
 pub enum StepError {
     OutOfField,
@@ -20,8 +20,8 @@ enum Direction {
     Right,
 }
 
-const SNAKE_INIT_X: usize = FIELD_SIZE / 2;
-const SNAKE_INIT_Y: usize = FIELD_SIZE / 2;
+const SNAKE_INIT_X: u32 = FIELD_SIZE / 2;
+const SNAKE_INIT_Y: u32 = FIELD_SIZE / 2;
 const SNAKE_INIT_DIR: Direction = Direction::Up;
 
 #[derive(PartialEq)]
@@ -30,9 +30,9 @@ pub enum Thing {
 }
 
 pub struct World {
-    pub snake: Vec<(usize, usize)>,
+    pub snake: Vec<(u32, u32)>,
     snake_dir: Direction,
-    pub things: Vec<(Thing, usize, usize)>,
+    pub things: Vec<(Thing, u32, u32)>,
     grow: i32, // grow for this amount of turns; 0 means do not grow
 }
 
