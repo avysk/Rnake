@@ -40,7 +40,6 @@ pub fn main() {
 
     'game: loop {
         let mut w = World::init();
-        let mut score: u32 = 0;
 
         let mut next_frame: Uint64 = 0;
         let mut turned = false;
@@ -101,7 +100,6 @@ pub fn main() {
                 }
                 Ok(StepOk::AteFood) => {
                     sdl.sounds.food();
-                    score += 1;
                 }
                 Ok(StepOk::Nothing) => {}
             }
@@ -148,7 +146,7 @@ pub fn main() {
         }
         sdl.messages(vec![
             "Game over.",
-            format!("Score {}.", score).as_ref(),
+            format!("Score {}.", w.score).as_ref(),
             "Press SPACE to play again,",
             "ESC to exit.",
         ]);
