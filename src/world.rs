@@ -1,7 +1,7 @@
 use rand::Rng;
 
 pub const FIELD_SIZE: u32 = 30;
-pub const FOOD_LIFETIME: u32 = 50;
+pub const FOOD_LIFETIME: u32 = 60;
 
 pub enum StepError {
     OutOfField,
@@ -100,9 +100,21 @@ impl World {
                 }
             }
         };
-        // Check if we ate something
+        // Check if we ate something and update lifetimes
         let mut extra: Vec<usize> = vec![];
-        for (idx, thing) in self.things.iter().enumerate() {
+        for (idx, thing) in self.things.iter_mut().enumerate() {
+            match thing.3 {
+                Some(0) =>
+                // the thing is expired
+                {
+                    extra.push(idx);
+                }
+                Some(n) => {
+                    thing.3 = Some(n - 1);
+                }
+                _ => {}
+            }
+
             if thing.1 != next_x || thing.2 != next_y {
                 continue;
             }
@@ -115,8 +127,9 @@ impl World {
                 }
             };
         }
-        if !extra.is_empty() {
-            self.things.swap_remove(extra[0]);
+
+        for (offset, r) in extra.iter().enumerate() {
+            self.things.swap_remove(r - offset);
         }
         // Maybe shrink snake
         if self.grow == 0 {
