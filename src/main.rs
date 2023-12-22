@@ -21,7 +21,7 @@ pub fn main() {
     let mut sdl = SDLWrapper::new(&FIELD_SIZE, &ttf_context);
 
     sdl.sounds.start();
-    sdl.message("Press SPACE to start the game");
+    sdl.messages(vec!["Press SPACE to start the game"]);
     'waiting_start: loop {
         for event in sdl.events.poll_iter() {
             match event {
@@ -40,7 +40,6 @@ pub fn main() {
 
     'game: loop {
         let mut w = World::init();
-        let mut score: u32 = 0;
 
         let mut next_frame: Uint64 = 0;
         let mut turned = false;
@@ -101,7 +100,6 @@ pub fn main() {
                 }
                 Ok(StepOk::AteFood) => {
                     sdl.sounds.food();
-                    score += 1;
                 }
                 Ok(StepOk::Nothing) => {}
             }
@@ -137,6 +135,7 @@ pub fn main() {
                 sdl.rect(&(*x + 1), &(*y + 1), &c);
             }
 
+            sdl.score(w.score);
             sdl.present();
 
             next_frame = unsafe { SDL_GetTicks64() } + FRAME_DELTA;
@@ -146,13 +145,12 @@ pub fn main() {
                 w.add_thing();
             }
         }
-        sdl.message(
-            format!(
-                "Game over. Score {}. Press SPACE to play again, ESC to exit.",
-                score
-            )
-            .as_ref(),
-        );
+        sdl.messages(vec![
+            "Game over.",
+            format!("Score {}.", w.score).as_ref(),
+            "Press SPACE to play again,",
+            "ESC to exit.",
+        ]);
         loop {
             for event in sdl.events.poll_iter() {
                 match event {
@@ -160,7 +158,7 @@ pub fn main() {
                         keycode: Some(Keycode::Space),
                         ..
                     } => {
-                       sdl.sounds.start();
+                        sdl.sounds.start();
                         continue 'game;
                     }
                     Event::KeyDown {
