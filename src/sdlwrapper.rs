@@ -3,6 +3,7 @@ use std::cmp::min;
 use sdl2::rect::Rect;
 use sdl2::render::{Canvas, TextureQuery};
 use sdl2::rwops::RWops;
+use sdl2::sys::{SDL_ShowCursor, SDL_DISABLE};
 use sdl2::ttf::{Font, Sdl2TtfContext};
 use sdl2::video::Window;
 use sdl2::{pixels::Color, EventPump};
@@ -48,6 +49,9 @@ impl<'a> SDLWrapper<'a> {
             .fullscreen_desktop()
             .build()
             .expect("Should be able to create SDL window");
+        unsafe {
+            SDL_ShowCursor(SDL_DISABLE as i32);
+        }
         let window_size = window.size();
         let canvas = window
             .into_canvas()
