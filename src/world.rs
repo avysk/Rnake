@@ -101,19 +101,22 @@ impl World {
             }
         };
         // Check if we ate something
-        let idx = self
-            .things
-            .iter()
-            .position(|x| x.1 == next_x && x.2 == next_y);
-        if let Some(pos) = idx {
-            match self.things[pos].0 {
+        let mut extra: Vec<usize> = vec![];
+        for (idx, thing) in self.things.iter().enumerate() {
+            if thing.1 != next_x || thing.2 != next_y {
+                continue;
+            }
+            extra.push(idx);
+            match thing.0 {
                 Thing::Food => {
                     self.score += 1;
                     self.grow += 3;
                     step_ok = StepOk::AteFood;
                 }
             };
-            self.things.swap_remove(pos);
+        }
+        if !extra.is_empty() {
+            self.things.swap_remove(extra[0]);
         }
         // Maybe shrink snake
         if self.grow == 0 {
