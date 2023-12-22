@@ -25,7 +25,6 @@ None.
 ## Future Plans
 
 - Tests.
-- Show score during the game.
 - Different types of things appearing in the field.
 - Support lifetime for things appearing in the field.
 - Replacement of hardcoded values with something configurable.
@@ -33,3 +32,8 @@ None.
 - Windows installer.
 - Customizable controls.
 - ...
+
+## Bugs
+
+- In-game score position is hardcoded.
+- No check if start/stop messages fit the screen.
