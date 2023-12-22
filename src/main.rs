@@ -128,7 +128,7 @@ pub fn main() {
             }
 
             // Draw the things
-            for (t, x, y) in &(w.things) {
+            for (t, x, y, _l) in &(w.things) {
                 let c = match t {
                     Thing::Food => Color::BLUE,
                 };

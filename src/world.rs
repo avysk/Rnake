@@ -1,6 +1,7 @@
 use rand::Rng;
 
 pub const FIELD_SIZE: u32 = 30;
+pub const FOOD_LIFETIME: u32 = 60;
 
 pub enum StepError {
     OutOfField,
@@ -32,7 +33,7 @@ pub enum Thing {
 pub struct World {
     pub snake: Vec<(u32, u32)>,
     snake_dir: Direction,
-    pub things: Vec<(Thing, u32, u32)>,
+    pub things: Vec<(Thing, u32, u32, Option<u32>)>,
     pub score: u32,
     grow: i32, // grow for this amount of turns; 0 means do not grow
 }
@@ -49,6 +50,20 @@ impl World {
             things: vec![],
             grow: 0,
             score: 0,
+        }
+    }
+    fn empty(&self) -> (u32, u32) {
+        let mut rng = rand::thread_rng();
+        loop {
+            let x = rng.gen_range(0..FIELD_SIZE);
+            let y = rng.gen_range(0..FIELD_SIZE);
+            if self.snake.contains(&(x, y)) {
+                continue;
+            }
+            if self.things.iter().any(|t| t.1 == x && t.2 == y) {
+                continue;
+            }
+            return (x, y);
         }
     }
     pub fn step(&mut self) -> Result<StepOk, StepError> {
@@ -85,20 +100,36 @@ impl World {
                 }
             }
         };
-        // Check if we ate something
-        let idx = self
-            .things
-            .iter()
-            .position(|x| x.1 == next_x && x.2 == next_y);
-        if let Some(pos) = idx {
-            match self.things[pos].0 {
+        // Check if we ate something and update lifetimes
+        let mut extra: Vec<usize> = vec![];
+        for (idx, thing) in self.things.iter_mut().enumerate() {
+            match thing.3 {
+                Some(0) =>
+                // the thing is expired
+                {
+                    extra.push(idx);
+                }
+                Some(n) => {
+                    thing.3 = Some(n - 1);
+                }
+                _ => {}
+            }
+
+            if thing.1 != next_x || thing.2 != next_y {
+                continue;
+            }
+            extra.push(idx);
+            match thing.0 {
                 Thing::Food => {
                     self.score += 1;
                     self.grow += 3;
                     step_ok = StepOk::AteFood;
                 }
             };
-            self.things.swap_remove(pos);
+        }
+
+        for (offset, r) in extra.iter().enumerate() {
+            self.things.swap_remove(r - offset);
         }
         // Maybe shrink snake
         if self.grow == 0 {
@@ -137,18 +168,7 @@ impl World {
     }
 
     pub fn add_thing(&mut self) {
-        let mut rng = rand::thread_rng();
-        loop {
-            let x = rng.gen_range(0..FIELD_SIZE);
-            let y = rng.gen_range(0..FIELD_SIZE);
-            if self.snake.contains(&(x, y)) {
-                continue;
-            }
-            if self.things.iter().any(|t| t.1 == x && t.2 == y) {
-                continue;
-            }
-            self.things.push((Thing::Food, x, y));
-            break;
-        }
+        let (x, y) = self.empty();
+        self.things.push((Thing::Food, x, y, Some(FOOD_LIFETIME)));
     }
 }
