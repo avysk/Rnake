@@ -1,6 +1,7 @@
 use rand::Rng;
 
 pub const FIELD_SIZE: u32 = 30;
+pub const FOOD_LIFETIME: u32 = 50;
 
 pub enum StepError {
     OutOfField,
@@ -32,7 +33,7 @@ pub enum Thing {
 pub struct World {
     pub snake: Vec<(u32, u32)>,
     snake_dir: Direction,
-    pub things: Vec<(Thing, u32, u32)>,
+    pub things: Vec<(Thing, u32, u32, Option<u32>)>,
     pub score: u32,
     grow: i32, // grow for this amount of turns; 0 means do not grow
 }
@@ -49,6 +50,20 @@ impl World {
             things: vec![],
             grow: 0,
             score: 0,
+        }
+    }
+    fn empty(&self) -> (u32, u32) {
+        let mut rng = rand::thread_rng();
+        loop {
+            let x = rng.gen_range(0..FIELD_SIZE);
+            let y = rng.gen_range(0..FIELD_SIZE);
+            if self.snake.contains(&(x, y)) {
+                continue;
+            }
+            if self.things.iter().any(|t| t.1 == x && t.2 == y) {
+                continue;
+            }
+            return (x, y);
         }
     }
     pub fn step(&mut self) -> Result<StepOk, StepError> {
@@ -137,18 +152,7 @@ impl World {
     }
 
     pub fn add_thing(&mut self) {
-        let mut rng = rand::thread_rng();
-        loop {
-            let x = rng.gen_range(0..FIELD_SIZE);
-            let y = rng.gen_range(0..FIELD_SIZE);
-            if self.snake.contains(&(x, y)) {
-                continue;
-            }
-            if self.things.iter().any(|t| t.1 == x && t.2 == y) {
-                continue;
-            }
-            self.things.push((Thing::Food, x, y));
-            break;
-        }
+        let (x, y) = self.empty();
+        self.things.push((Thing::Food, x, y, Some(FOOD_LIFETIME)));
     }
 }
