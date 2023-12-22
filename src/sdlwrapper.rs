@@ -15,7 +15,6 @@ macro_rules! rect {
     };
 }
 
-// const MESSAGE_PADDING: u32 = 50;
 const LINE_INTERVAL: u32 = 10;
 
 pub struct SDLWrapper<'a> {
@@ -24,6 +23,8 @@ pub struct SDLWrapper<'a> {
     // graphics
     border_x: u32,
     border_y: u32,
+    score_x: u32,
+    score_y: u32,
     cell: u32,
     canvas: Canvas<Window>,
     // sound player
@@ -75,6 +76,8 @@ impl<'a> SDLWrapper<'a> {
             events,
             border_x,
             border_y,
+            score_x: window_size.0 - 150, // TODO
+            score_y: 50,
             cell,
             canvas,
             sounds,
@@ -132,5 +135,21 @@ impl<'a> SDLWrapper<'a> {
             pad_h += LINE_INTERVAL;
         }
         self.present();
+    }
+    pub fn score(&mut self, sc: u32) {
+        let surface = self
+            .font
+            .render(sc.to_string().as_ref())
+            .solid(Color::YELLOW)
+            .expect("Should be able to render score");
+        let creator = self.canvas.texture_creator();
+        let texture = creator
+            .create_texture_from_surface(surface)
+            .expect("Should be able to create texture from surface");
+        let TextureQuery { width, height, .. } = texture.query();
+        let tgt = rect!(self.score_x, self.score_y, width, height);
+        self.canvas
+            .copy(&texture, None, Some(tgt))
+            .expect("Should be able to copy texture to canvas");
     }
 }

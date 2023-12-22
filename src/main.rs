@@ -135,6 +135,7 @@ pub fn main() {
                 sdl.rect(&(*x + 1), &(*y + 1), &c);
             }
 
+            sdl.score(w.score);
             sdl.present();
 
             next_frame = unsafe { SDL_GetTicks64() } + FRAME_DELTA;
