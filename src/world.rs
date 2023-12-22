@@ -33,6 +33,7 @@ pub struct World {
     pub snake: Vec<(u32, u32)>,
     snake_dir: Direction,
     pub things: Vec<(Thing, u32, u32)>,
+    pub score: u32,
     grow: i32, // grow for this amount of turns; 0 means do not grow
 }
 
@@ -47,6 +48,7 @@ impl World {
             snake_dir: SNAKE_INIT_DIR,
             things: vec![],
             grow: 0,
+            score: 0,
         }
     }
     pub fn step(&mut self) -> Result<StepOk, StepError> {
@@ -91,6 +93,7 @@ impl World {
         if let Some(pos) = idx {
             match self.things[pos].0 {
                 Thing::Food => {
+                    self.score += 1;
                     self.grow += 3;
                     step_ok = StepOk::AteFood;
                 }
