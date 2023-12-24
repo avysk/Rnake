@@ -129,10 +129,14 @@ pub fn main() {
 
             // Draw the things
             for (t, x, y, _l) in &(w.things) {
-                let c = match t {
-                    Thing::Food => Color::BLUE,
-                };
-                sdl.rect(&(*x + 1), &(*y + 1), &c);
+                if *t == Thing::Food {
+                    sdl.show_food(x, y);
+                    continue;
+                }
+                // let c = match t {
+                //    Thing::Food => Color::BLUE,
+                // };
+                // sdl.rect(&(*x + 1), &(*y + 1), &c);
             }
 
             sdl.score(w.score);

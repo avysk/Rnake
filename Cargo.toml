@@ -25,3 +25,4 @@ x86_64-pc-windows-msvc = { triplet = "x64-windows-static-md" }
 [dependencies]
 bytemuck = "1.14.0"
 rand = "0.8.5"
+resvg = "0.37.0"
