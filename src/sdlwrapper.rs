@@ -1,7 +1,10 @@
 use std::cmp::min;
 
+use resvg::usvg::TreeParsing;
+use resvg::Tree;
+use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect;
-use sdl2::render::{Canvas, TextureQuery};
+use sdl2::render::{Canvas, TextureAccess, TextureQuery};
 use sdl2::rwops::RWops;
 use sdl2::sys::{SDL_ShowCursor, SDL_DISABLE};
 use sdl2::ttf::{Font, Sdl2TtfContext};
@@ -32,6 +35,7 @@ pub struct SDLWrapper<'a> {
     pub sounds: Box<dyn Player>,
     // text
     font: Font<'a, 'static>,
+    pixmap: resvg::tiny_skia::Pixmap,
 }
 
 impl<'a> SDLWrapper<'a> {
@@ -76,6 +80,22 @@ impl<'a> SDLWrapper<'a> {
             .load_font_from_rwops(rwops, 72)
             .expect("Should be able to load font from rwops.");
 
+        // Images
+        let tree = resvg::usvg::Tree::from_str(
+            include_str!("images/food01.svg"),
+            &resvg::usvg::Options::default(),
+        )
+        .expect("Should be able to parse SVG tree");
+        let rtree = Tree::from_usvg(&tree);
+        let mut pixmap =
+            resvg::tiny_skia::Pixmap::new(cell, cell).expect("Should be able to create pixmap");
+        let scale = cell as f32 / f32::max(rtree.size.width(), rtree.size.height());
+        rtree.render(
+            // no, this does not make sense
+            resvg::tiny_skia::Transform::from_scale(scale, scale),
+            &mut pixmap.as_mut(),
+        );
+
         Self {
             events,
             border_x,
@@ -86,6 +106,7 @@ impl<'a> SDLWrapper<'a> {
             canvas,
             sounds,
             font,
+            pixmap,
         }
     }
     pub fn rect(&mut self, x: &u32, y: &u32, c: &Color) {
@@ -97,6 +118,31 @@ impl<'a> SDLWrapper<'a> {
             .fill_rect(rect)
             .expect("SDL error: cannot draw rectangle");
     }
+    pub fn show_food(&mut self, x: &u32, y: &u32) {
+        let rgba_data = self.pixmap.data();
+        let width = self.pixmap.width();
+        let height = self.pixmap.height();
+        let creator = self.canvas.texture_creator();
+        let mut texture = creator
+            .create_texture(
+                Some(PixelFormatEnum::RGBA32),
+                TextureAccess::Target,
+                width,
+                height,
+            )
+            .expect("Should be able to create texture");
+        texture
+            // 4 is one byte for each of RGBA
+            .update(None, rgba_data, 4 * self.cell as usize)
+            .expect("Should be able to update texture");
+        let rx = self.border_x + self.cell * (*x + 1);
+        let ry = self.border_y + self.cell * (*y + 1);
+        let tgt = rect!(rx, ry, self.cell, self.cell);
+        self.canvas
+            .copy(&texture, None, Some(tgt))
+            .expect("Should be able to copy texture to canvas");
+    }
+
     pub fn clear(&mut self) {
         self.canvas.set_draw_color(Color::BLACK);
         self.canvas.clear();
