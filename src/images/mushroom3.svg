@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<filter color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse" height="289.173" id="Filter" width="907.246" x="48.004" y="369.178">
+<feGaussianBlur in="SourceGraphic" result="Blur" stdDeviation="1.04604"/>
+</filter>
+<filter color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse" height="593.243" id="Filter_2" width="1026.61" x="-1.30452" y="-1.30452">
+<feGaussianBlur in="SourceGraphic" result="Blur" stdDeviation="0.521807"/>
+</filter>
+</defs>
+<clipPath id="ArtboardFrame">
+<rect height="1024" width="1024" x="0" y="0"/>
+</clipPath>
+<g clip-path="url(#ArtboardFrame)" id="Layer-1" vectornator:layerName="Layer 1">
+<path d="M50.6191 562.396L79.6629 437.681L575.896 371.793L856.376 427.484L952.635 590.633L779.203 655.736C779.203 655.736 255.585 629.852 251.436 625.93C247.287 622.008 50.6191 562.396 50.6191 562.396Z" fill="#bda27c" fill-rule="nonzero" filter="url(#Filter)" opacity="1" stroke="none" vectornator:blur="2.09207" vectornator:layerName="Curve 1"/>
+<path d="M206.103 1024L167.931 914.972L163.782 787.119L168.761 659.266L330.576 327.476C330.576 327.476 635.121 344.732 640.929 329.045C646.738 313.357 894.855 666.326 894.855 666.326L976.177 811.435L518.116 956.544L416.048 952.622" fill="#c9b09a" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 2"/>
+<path d="M53.1086 560.043L114.515 510.627L267.203 450.231L728.583 448.662L813.225 473.762L950.976 590.633L1024 498.862L979.19 276.1L748.499 50.1999L459.721-1.27898e-13L310.353 26.6687L141.9 134.128L1.13687e-13 330.221L2.48947 483.959L53.1086 560.043Z" fill="#ec000d" fill-rule="nonzero" filter="url(#Filter_2)" opacity="1" stroke="none" vectornator:blur="1.04361" vectornator:layerName="Curve 3"/>
+</g>
+</svg>
