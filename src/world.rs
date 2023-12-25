@@ -33,7 +33,8 @@ pub enum Thing {
 pub struct World {
     pub snake: Vec<(u32, u32)>,
     snake_dir: Direction,
-    pub things: Vec<(Thing, u32, u32, Option<u32>)>,
+    // what is it, index of the corresponding picture, coordinates, possible lifetime
+    pub things: Vec<(Thing, usize, u32, u32, Option<u32>)>,
     pub score: u32,
     grow: i32, // grow for this amount of turns; 0 means do not grow
 }
@@ -52,7 +53,7 @@ impl World {
             score: 0,
         }
     }
-    fn empty(&self) -> (u32, u32) {
+    fn empty_spot(&self) -> (u32, u32) {
         let mut rng = rand::thread_rng();
         loop {
             let x = rng.gen_range(0..FIELD_SIZE);
@@ -60,7 +61,7 @@ impl World {
             if self.snake.contains(&(x, y)) {
                 continue;
             }
-            if self.things.iter().any(|t| t.1 == x && t.2 == y) {
+            if self.things.iter().any(|t| t.2 == x && t.3 == y) {
                 continue;
             }
             return (x, y);
@@ -103,19 +104,19 @@ impl World {
         // Check if we ate something and update lifetimes
         let mut extra: Vec<usize> = vec![];
         for (idx, thing) in self.things.iter_mut().enumerate() {
-            match thing.3 {
+            match thing.4 {
                 Some(0) =>
                 // the thing is expired
                 {
                     extra.push(idx);
                 }
                 Some(n) => {
-                    thing.3 = Some(n - 1);
+                    thing.4 = Some(n - 1);
                 }
                 _ => {}
             }
 
-            if thing.1 != next_x || thing.2 != next_y {
+            if thing.2 != next_x || thing.3 != next_y {
                 continue;
             }
             extra.push(idx);
@@ -168,7 +169,9 @@ impl World {
     }
 
     pub fn add_thing(&mut self) {
-        let (x, y) = self.empty();
-        self.things.push((Thing::Food, x, y, Some(FOOD_LIFETIME)));
+        let (x, y) = self.empty_spot();
+        let mut rng = rand::thread_rng();
+        self.things
+            .push((Thing::Food, rng.gen_range(0..3), x, y, Some(FOOD_LIFETIME)));
     }
 }

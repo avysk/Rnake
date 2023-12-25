@@ -1,4 +1,5 @@
 use std::cmp::min;
+use std::collections::HashMap;
 
 use resvg::usvg::TreeParsing;
 use resvg::Tree;
@@ -13,9 +14,126 @@ use sdl2::{pixels::Color, EventPump};
 
 use crate::sound::{Player, Sounds};
 
+/// This macro creates SDL2 Rect, casting the arguments to the appropriate types
 macro_rules! rect {
     ($x:expr, $y:expr, $w:expr, $h:expr) => {
         Rect::new(($x) as i32, ($y) as i32, ($w) as u32, ($h) as u32)
+    };
+}
+
+/// This macro creates resvg::tiny_skia::Pixmap of the given size, renders on it image from
+/// images/, and pushes the pixmap to a vector in a given hashmap.
+macro_rules! load_one_image {
+    ($cell:expr, $pixmaps:ident, $name:ident $num:literal) => {{
+        let tree = resvg::usvg::Tree::from_str(
+            include_str!(concat!(
+                "images/",
+                stringify!($name),
+                "0",
+                stringify!($num),
+                ".svg"
+            )),
+            &resvg::usvg::Options::default(),
+        )
+        .expect("Should be able to parse SVG tree");
+        let rtree = Tree::from_usvg(&tree);
+        let cell = *$cell;
+        let mut pixmap =
+            resvg::tiny_skia::Pixmap::new(cell, cell).expect("Should be able to create pixmap");
+        let scale = cell as f32 / f32::max(rtree.size.width(), rtree.size.height());
+        rtree.render(
+            // no, this does not make sense
+            resvg::tiny_skia::Transform::from_scale(scale, scale),
+            &mut pixmap.as_mut(),
+        );
+        // Pixmaps in the vector in the reverse order! Who cares.
+        $pixmaps
+            .entry(stringify!($name).to_string())
+            .or_insert(vec![])
+            .push(pixmap);
+    }};
+}
+
+/// This macro loads the given amount of images
+macro_rules! load_images_rec {
+    ($cell:expr, $pixmaps:ident, $name:ident, 1) => {
+        load_one_image!($cell, $pixmaps, $name 1);
+    };
+    ($cell:expr, $pixmaps:ident, $name:ident, 2) => {
+        load_one_image!($cell, $pixmaps, $name 2);
+        load_images_rec!($cell, $pixmaps, $name, 1);
+    };
+    ($cell:expr, $pixmaps:ident, $name:ident, 3) => {
+        load_one_image!($cell, $pixmaps, $name 3);
+        load_images_rec!($cell, $pixmaps, $name, 2);
+    };
+    ($cell:expr, $pixmaps:ident, $name:ident, 4) => {
+        load_one_image!($cell, $pixmaps, $name 4);
+        load_images_rec!($cell, $pixmaps, $name, 3);
+    };
+    ($cell:expr, $pixmaps:ident, $name:ident, 5) => {
+        load_one_image!($cell, $pixmaps, $name 5);
+        load_images_rec!($cell, $pixmaps, $name, 4);
+    };
+    ($cell:expr, $pixmaps:ident, $name:ident, 6) => {
+        load_one_image!($cell, $pixmaps, $name 6);
+        load_images_rec!($cell, $pixmaps, $name, 5);
+    };
+    ($cell:expr, $pixmaps:ident, $name:ident, 7) => {
+        load_one_image!($cell, $pixmaps, $name 7);
+        load_images_rec!($cell, $pixmaps, $name, 6);
+    };
+    ($cell:expr, $pixmaps:ident, $name:ident, 8) => {
+        load_one_image!($cell, $pixmaps, $name 8);
+        load_images_rec!($cell, $pixmaps, $name, 7);
+    };
+    ($cell:expr, $pixmaps:ident, $name:ident, 9) => {
+        load_one_image!($cell, $pixmaps, $name 9);
+        load_images_rec!($cell, $pixmaps, $name, 8);
+    };
+}
+
+/// This macro does the following:
+/// - defines create_pixmaps() which loads pixmaps
+/// - defines a bench of blah() on SDLWrapper
+macro_rules! load_images {
+    ($($name:ident $count:tt),*) => {
+        fn create_pixmaps(cell_size: &u32) -> HashMap<String, Vec<resvg::tiny_skia::Pixmap>> {
+            let mut pixmaps = HashMap::new();
+            $(load_images_rec!(cell_size, pixmaps, $name, $count);)*
+            pixmaps
+        }
+        $(impl<'a> SDLWrapper<'a> {
+            pub fn $name(&mut self, idx: &usize, x: &u32, y: &u32) {
+                assert!(*idx < $count,
+                    "Programming error: there is no image '{}' with index '{}'",
+                    stringify!($name),
+                    $count);
+                let pixmap = &self.pixmaps[stringify!($name)][*idx];
+                let rgba_data = pixmap.data();
+                let width = pixmap.width();
+                let height = pixmap.height();
+                let creator = self.canvas.texture_creator();
+                let mut texture = creator
+                    .create_texture(
+                        Some(PixelFormatEnum::RGBA32),
+                        TextureAccess::Target,
+                        width,
+                        height,
+                    )
+                    .expect("Should be able to create texture");
+                texture
+                    // 4 is one byte for each of RGBA
+                    .update(None, rgba_data, 4 * self.cell as usize)
+                    .expect("Should be able to update texture");
+                let rx = self.border_x + self.cell * (*x + 1);
+                let ry = self.border_y + self.cell * (*y + 1);
+                let tgt = rect!(rx, ry, self.cell, self.cell);
+                self.canvas
+                    .copy(&texture, None, Some(tgt))
+                    .expect("Should be able to copy texture to canvas");
+            }
+        })*
     };
 }
 
@@ -35,7 +153,7 @@ pub struct SDLWrapper<'a> {
     pub sounds: Box<dyn Player>,
     // text
     font: Font<'a, 'static>,
-    pixmap: resvg::tiny_skia::Pixmap,
+    pixmaps: HashMap<String, Vec<resvg::tiny_skia::Pixmap>>,
 }
 
 impl<'a> SDLWrapper<'a> {
@@ -80,21 +198,9 @@ impl<'a> SDLWrapper<'a> {
             .load_font_from_rwops(rwops, 72)
             .expect("Should be able to load font from rwops.");
 
-        // Images
-        let tree = resvg::usvg::Tree::from_str(
-            include_str!("images/food01.svg"),
-            &resvg::usvg::Options::default(),
-        )
-        .expect("Should be able to parse SVG tree");
-        let rtree = Tree::from_usvg(&tree);
-        let mut pixmap =
-            resvg::tiny_skia::Pixmap::new(cell, cell).expect("Should be able to create pixmap");
-        let scale = cell as f32 / f32::max(rtree.size.width(), rtree.size.height());
-        rtree.render(
-            // no, this does not make sense
-            resvg::tiny_skia::Transform::from_scale(scale, scale),
-            &mut pixmap.as_mut(),
-        );
+        let pixmaps = create_pixmaps(&cell);
+
+        load_images!(food 3);
 
         Self {
             events,
@@ -106,7 +212,7 @@ impl<'a> SDLWrapper<'a> {
             canvas,
             sounds,
             font,
-            pixmap,
+            pixmaps,
         }
     }
     pub fn rect(&mut self, x: &u32, y: &u32, c: &Color) {
@@ -117,30 +223,6 @@ impl<'a> SDLWrapper<'a> {
         self.canvas
             .fill_rect(rect)
             .expect("SDL error: cannot draw rectangle");
-    }
-    pub fn show_food(&mut self, x: &u32, y: &u32) {
-        let rgba_data = self.pixmap.data();
-        let width = self.pixmap.width();
-        let height = self.pixmap.height();
-        let creator = self.canvas.texture_creator();
-        let mut texture = creator
-            .create_texture(
-                Some(PixelFormatEnum::RGBA32),
-                TextureAccess::Target,
-                width,
-                height,
-            )
-            .expect("Should be able to create texture");
-        texture
-            // 4 is one byte for each of RGBA
-            .update(None, rgba_data, 4 * self.cell as usize)
-            .expect("Should be able to update texture");
-        let rx = self.border_x + self.cell * (*x + 1);
-        let ry = self.border_y + self.cell * (*y + 1);
-        let tgt = rect!(rx, ry, self.cell, self.cell);
-        self.canvas
-            .copy(&texture, None, Some(tgt))
-            .expect("Should be able to copy texture to canvas");
     }
 
     pub fn clear(&mut self) {

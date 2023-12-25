@@ -128,9 +128,9 @@ pub fn main() {
             }
 
             // Draw the things
-            for (t, x, y, _l) in &(w.things) {
+            for (t, n, x, y, _l) in &(w.things) {
                 if *t == Thing::Food {
-                    sdl.show_food(x, y);
+                    sdl.food(n, x, y);
                     continue;
                 }
                 // let c = match t {
