@@ -119,11 +119,11 @@ pub fn main() {
                 .snake
                 .first()
                 .expect("Programming error: a snake cannot be empty");
-            sdl.rect(&(*hx + 1), &(*hy + 1), &Color::GREEN);
+            sdl.rect(hx, hy, &Color::GREEN);
 
             // draw rest of the snake
             for (bx, by) in &w.snake[1..] {
-                sdl.rect(&(*bx + 1), &(*by + 1), &Color::GRAY);
+                sdl.rect(bx, by, &Color::GRAY);
             }
 
             // Draw the things
