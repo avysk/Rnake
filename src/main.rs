@@ -108,11 +108,10 @@ pub fn main() {
 
             // draw field border
             for b in 0..=(FIELD_SIZE + 1) {
-                let wall = &Color::YELLOW;
-                sdl.rect(&b, &0, wall);
-                sdl.rect(&b, &(FIELD_SIZE + 1), wall);
-                sdl.rect(&0, &b, wall);
-                sdl.rect(&(FIELD_SIZE + 1), &b, wall);
+                sdl.wall(&0, &b, &0);
+                sdl.wall(&0, &b, &(FIELD_SIZE + 1));
+                sdl.wall(&0, &0, &b);
+                sdl.wall(&0, &(FIELD_SIZE + 1), &b);
             }
 
             // draw the snake head

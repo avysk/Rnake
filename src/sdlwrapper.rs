@@ -200,7 +200,7 @@ impl<'a> SDLWrapper<'a> {
 
         let pixmaps = create_pixmaps(&cell);
 
-        load_images!(food 3);
+        load_images!(food 3, wall 1);
 
         Self {
             events,
