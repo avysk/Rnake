@@ -1,3 +1,4 @@
+1.4.0 Use picture for border wall and rotating pictures for food.
 1.3.0 Use multiline start/stop messages. Show score during the game.
 1.2.1 Do not show start message again on restarting the game.
 1.2.0 Show start/stop fullscreen messages. Count score and show it on finish screen. Allow restarting the game.
