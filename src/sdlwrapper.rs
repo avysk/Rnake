@@ -126,8 +126,8 @@ macro_rules! load_images {
                     // 4 is one byte for each of RGBA
                     .update(None, rgba_data, 4 * self.cell as usize)
                     .expect("Should be able to update texture");
-                let rx = self.border_x + self.cell * (*x + 1);
-                let ry = self.border_y + self.cell * (*y + 1);
+                let rx = self.border_x + self.cell * *x;
+                let ry = self.border_y + self.cell * *y;
                 let tgt = rect!(rx, ry, self.cell, self.cell);
                 self.canvas
                     .copy(&texture, None, Some(tgt))
@@ -200,7 +200,7 @@ impl<'a> SDLWrapper<'a> {
 
         let pixmaps = create_pixmaps(&cell);
 
-        load_images!(food 3);
+        load_images!(food 3, wall 1);
 
         Self {
             events,

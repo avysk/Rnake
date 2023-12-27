@@ -56,8 +56,8 @@ impl World {
     fn empty_spot(&self) -> (u32, u32) {
         let mut rng = rand::thread_rng();
         loop {
-            let x = rng.gen_range(0..FIELD_SIZE);
-            let y = rng.gen_range(0..FIELD_SIZE);
+            let x = rng.gen_range(0..FIELD_SIZE) + 1;
+            let y = rng.gen_range(0..FIELD_SIZE) + 1;
             if self.snake.contains(&(x, y)) {
                 continue;
             }
@@ -73,28 +73,28 @@ impl World {
 
         match self.snake_dir {
             Direction::Up => {
-                if next_y > 0 {
+                if next_y > 1 {
                     next_y -= 1;
                 } else {
                     return Err(StepError::OutOfField);
                 }
             }
             Direction::Down => {
-                if next_y < FIELD_SIZE - 1 {
+                if next_y < FIELD_SIZE {
                     next_y += 1
                 } else {
                     return Err(StepError::OutOfField);
                 }
             }
             Direction::Left => {
-                if next_x > 0 {
+                if next_x > 1 {
                     next_x -= 1;
                 } else {
                     return Err(StepError::OutOfField);
                 }
             }
             Direction::Right => {
-                if next_x < FIELD_SIZE - 1 {
+                if next_x < FIELD_SIZE {
                     next_x += 1
                 } else {
                     return Err(StepError::OutOfField);
