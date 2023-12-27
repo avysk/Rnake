@@ -109,6 +109,7 @@ impl World {
                 // the thing is expired
                 {
                     extra.push(idx);
+                    continue; // if the thing is expired, do not check if we ate it
                 }
                 Some(n) => {
                     thing.4 = Some(n - 1);
