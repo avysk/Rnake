@@ -108,11 +108,10 @@ pub fn main() {
 
             // draw field border
             for b in 0..=(FIELD_SIZE + 1) {
-                let wall = &Color::YELLOW;
-                sdl.rect(&b, &0, wall);
-                sdl.rect(&b, &(FIELD_SIZE + 1), wall);
-                sdl.rect(&0, &b, wall);
-                sdl.rect(&(FIELD_SIZE + 1), &b, wall);
+                sdl.wall(&0, &b, &0);
+                sdl.wall(&0, &b, &(FIELD_SIZE + 1));
+                sdl.wall(&0, &0, &b);
+                sdl.wall(&0, &(FIELD_SIZE + 1), &b);
             }
 
             // draw the snake head
@@ -120,19 +119,23 @@ pub fn main() {
                 .snake
                 .first()
                 .expect("Programming error: a snake cannot be empty");
-            sdl.rect(&(*hx + 1), &(*hy + 1), &Color::GREEN);
+            sdl.rect(hx, hy, &Color::GREEN);
 
             // draw rest of the snake
             for (bx, by) in &w.snake[1..] {
-                sdl.rect(&(*bx + 1), &(*by + 1), &Color::GRAY);
+                sdl.rect(bx, by, &Color::GRAY);
             }
 
             // Draw the things
-            for (t, x, y) in &(w.things) {
-                let c = match t {
-                    Thing::Food => Color::BLUE,
-                };
-                sdl.rect(&(*x + 1), &(*y + 1), &c);
+            for (t, n, x, y, _l) in &(w.things) {
+                if *t == Thing::Food {
+                    sdl.food(n, x, y);
+                    continue;
+                }
+                // let c = match t {
+                //    Thing::Food => Color::BLUE,
+                // };
+                // sdl.rect(&(*x + 1), &(*y + 1), &c);
             }
 
             sdl.score(w.score);
