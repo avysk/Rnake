@@ -38,6 +38,8 @@ pub fn main() {
         }
     }
 
+    let mut quit_msg = "You have exted the game.";
+
     'game: loop {
         let mut w = World::init();
 
@@ -90,16 +92,26 @@ pub fn main() {
 
             // Advance
             match w.step() {
+                Err(StepError::Obstacle) => {
+                    sdl.sounds.obstacle();
+                    quit_msg = "You have hit an obstacle.";
+                    break 'running;
+                }
                 Err(StepError::OutOfField) => {
                     sdl.sounds.wall();
+                    quit_msg = "You have hit the wall.";
                     break 'running;
                 }
                 Err(StepError::SelfHit) => {
                     sdl.sounds.boom();
+                    quit_msg = "You have hit yourself.";
                     break 'running;
                 }
                 Ok(StepOk::AteFood) => {
                     sdl.sounds.food();
+                }
+                Ok(StepOk::AteMystery) => {
+                    sdl.sounds.mystery();
                 }
                 Ok(StepOk::Nothing) => {}
             }
@@ -127,15 +139,18 @@ pub fn main() {
             }
 
             // Draw the things
-            for (t, n, x, y, _l) in &(w.things) {
-                if *t == Thing::Food {
-                    sdl.food(n, x, y);
-                    continue;
+            for t in &(w.things) {
+                match t.what {
+                    Thing::Food => {
+                        sdl.food(&t.picture_index, &t.x, &t.y);
+                    }
+                    Thing::Mystery => {
+                        sdl.mystery(&t.picture_index, &t.x, &t.y);
+                    }
+                    Thing::Obstacle => {
+                        sdl.obstacle(&t.picture_index, &t.x, &t.y);
+                    }
                 }
-                // let c = match t {
-                //    Thing::Food => Color::BLUE,
-                // };
-                // sdl.rect(&(*x + 1), &(*y + 1), &c);
             }
 
             sdl.score(w.score);
@@ -143,12 +158,9 @@ pub fn main() {
 
             next_frame = unsafe { SDL_GetTicks64() } + FRAME_DELTA;
             turned = false;
-
-            if w.things.is_empty() {
-                w.add_thing();
-            }
         }
         sdl.messages(vec![
+            quit_msg,
             "Game over.",
             format!("Score {}.", w.score).as_ref(),
             "Press SPACE to play again,",
