@@ -51,7 +51,7 @@ macro_rules! with_sounds {
     }
 }
 
-with_sounds!(boom food start wall);
+with_sounds!(boom food obstacle start wall);
 
 impl Drop for Sounds {
     fn drop(&mut self) {

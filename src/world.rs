@@ -1,9 +1,12 @@
-use rand::Rng;
+use rand::{distributions::Uniform, Rng};
 
 pub const FIELD_SIZE: u32 = 30;
 pub const FOOD_LIFETIME: u32 = 60;
+pub const OBSTACLE_LIFETIME: u32 = 60;
+pub const OBSTACLE_P: f32 = 0.015;
 
 pub enum StepError {
+    Obstacle,
     OutOfField,
     SelfHit,
 }
@@ -28,20 +31,30 @@ const SNAKE_INIT_DIR: Direction = Direction::Up;
 #[derive(PartialEq)]
 pub enum Thing {
     Food,
+    Obstacle,
+}
+
+pub struct ThingInField {
+    pub what: Thing,
+    pub picture_index: usize,
+    // coordinates are from 1 to FIELD_SIZE
+    pub x: u32,
+    pub y: u32,
+    lifetime: Option<u32>,
 }
 
 pub struct World {
     pub snake: Vec<(u32, u32)>,
     snake_dir: Direction,
     // what is it, index of the corresponding picture, coordinates, possible lifetime
-    pub things: Vec<(Thing, usize, u32, u32, Option<u32>)>,
+    pub things: Vec<ThingInField>,
     pub score: u32,
     grow: i32, // grow for this amount of turns; 0 means do not grow
 }
 
 impl World {
     pub fn init() -> Self {
-        World {
+        let mut w = World {
             snake: vec![
                 (SNAKE_INIT_X, SNAKE_INIT_Y),
                 (SNAKE_INIT_X, SNAKE_INIT_Y + 1),
@@ -51,7 +64,9 @@ impl World {
             things: vec![],
             grow: 0,
             score: 0,
-        }
+        };
+        w.add_food();
+        w
     }
     fn empty_spot(&self) -> (u32, u32) {
         let mut rng = rand::thread_rng();
@@ -61,7 +76,7 @@ impl World {
             if self.snake.contains(&(x, y)) {
                 continue;
             }
-            if self.things.iter().any(|t| t.2 == x && t.3 == y) {
+            if self.things.iter().any(|t| t.x == x && t.y == y) {
                 continue;
             }
             return (x, y);
@@ -70,6 +85,7 @@ impl World {
     pub fn step(&mut self) -> Result<StepOk, StepError> {
         let (mut next_x, mut next_y) = self.snake[0];
         let mut step_ok = StepOk::Nothing;
+        let mut add_food = false;
 
         match self.snake_dir {
             Direction::Up => {
@@ -104,28 +120,35 @@ impl World {
         // Check if we ate something and update lifetimes
         let mut extra: Vec<usize> = vec![];
         for (idx, thing) in self.things.iter_mut().enumerate() {
-            match thing.4 {
+            match thing.lifetime {
                 Some(0) =>
                 // the thing is expired
                 {
                     extra.push(idx);
+                    if thing.what == Thing::Food {
+                        add_food = true;
+                    }
                     continue; // if the thing is expired, do not check if we ate it
                 }
                 Some(n) => {
-                    thing.4 = Some(n - 1);
+                    thing.lifetime = Some(n - 1);
                 }
                 _ => {}
             }
 
-            if thing.2 != next_x || thing.3 != next_y {
+            if thing.x != next_x || thing.y != next_y {
                 continue;
             }
             extra.push(idx);
-            match thing.0 {
+            match thing.what {
                 Thing::Food => {
                     self.score += 1;
                     self.grow += 3;
                     step_ok = StepOk::AteFood;
+                    add_food = true;
+                }
+                Thing::Obstacle => {
+                    return Err(StepError::Obstacle);
                 }
             };
         }
@@ -148,6 +171,12 @@ impl World {
             return Err(StepError::SelfHit);
         }
         self.snake.insert(0, (next_x, next_y));
+
+        if add_food {
+            self.add_food();
+        }
+        self.maybe_add_obstacle();
+
         Ok(step_ok)
     }
 
@@ -169,10 +198,30 @@ impl World {
         };
     }
 
-    pub fn add_thing(&mut self) {
+    fn add_food(&mut self) {
         let (x, y) = self.empty_spot();
         let mut rng = rand::thread_rng();
-        self.things
-            .push((Thing::Food, rng.gen_range(0..3), x, y, Some(FOOD_LIFETIME)));
+        self.things.push(ThingInField {
+            what: Thing::Food,
+            picture_index: rng.gen_range(0..3),
+            x,
+            y,
+            lifetime: Some(FOOD_LIFETIME),
+        });
+    }
+
+    fn maybe_add_obstacle(&mut self) {
+        let mut rng = rand::thread_rng();
+        if rng.sample(Uniform::new(0.0, 1.0)) > OBSTACLE_P {
+            return;
+        }
+        let (x, y) = self.empty_spot();
+        self.things.push(ThingInField {
+            what: Thing::Obstacle,
+            picture_index: rng.gen_range(0..3),
+            x,
+            y,
+            lifetime: Some(OBSTACLE_LIFETIME),
+        });
     }
 }
