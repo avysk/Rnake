@@ -110,6 +110,9 @@ pub fn main() {
                 Ok(StepOk::AteFood) => {
                     sdl.sounds.food();
                 }
+                Ok(StepOk::AteMystery) => {
+                    sdl.sounds.mystery();
+                }
                 Ok(StepOk::Nothing) => {}
             }
 
@@ -140,6 +143,9 @@ pub fn main() {
                 match t.what {
                     Thing::Food => {
                         sdl.food(&t.picture_index, &t.x, &t.y);
+                    }
+                    Thing::Mystery => {
+                        sdl.mystery(&t.picture_index, &t.x, &t.y);
                     }
                     Thing::Obstacle => {
                         sdl.obstacle(&t.picture_index, &t.x, &t.y);
