@@ -25,7 +25,7 @@ None.
 ## Future Plans
 
 - Tests.
-- Different types of things appearing in the field.
+- More types of things appearing in the field.
 - Replacement of hardcoded values with something configurable.
 - Better graphics.
 - Windows installer.
