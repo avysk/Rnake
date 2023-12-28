@@ -200,13 +200,18 @@ impl World {
 
     fn add_food(&mut self) {
         let (x, y) = self.empty_spot();
+        let lifetime = if x == 1 || y == 1 || x == FIELD_SIZE || y == FIELD_SIZE {
+            None
+        } else {
+            Some(FOOD_LIFETIME)
+        };
         let mut rng = rand::thread_rng();
         self.things.push(ThingInField {
             what: Thing::Food,
             picture_index: rng.gen_range(0..3),
             x,
             y,
-            lifetime: Some(FOOD_LIFETIME),
+            lifetime,
         });
     }
 
