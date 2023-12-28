@@ -4,6 +4,10 @@ pub const FIELD_SIZE: u32 = 30;
 pub const FOOD_LIFETIME: u32 = 60;
 pub const OBSTACLE_LIFETIME: u32 = 60;
 pub const OBSTACLE_P: f32 = 0.015;
+pub const MYSTERY_P: f32 = 0.0025;
+pub const MYSTERY_LIFETIME: u32 = 120;
+pub const MYSTERY_SCORE: u32 = 5;
+pub const MYSTERY_GROW_SNAKE: u32 = 15;
 
 pub enum StepError {
     Obstacle,
@@ -14,6 +18,7 @@ pub enum StepError {
 pub enum StepOk {
     Nothing,
     AteFood,
+    AteMystery,
 }
 
 #[derive(Debug)]
@@ -31,6 +36,7 @@ const SNAKE_INIT_DIR: Direction = Direction::Up;
 #[derive(PartialEq)]
 pub enum Thing {
     Food,
+    Mystery,
     Obstacle,
 }
 
@@ -49,7 +55,7 @@ pub struct World {
     // what is it, index of the corresponding picture, coordinates, possible lifetime
     pub things: Vec<ThingInField>,
     pub score: u32,
-    grow: i32, // grow for this amount of turns; 0 means do not grow
+    grow: u32, // grow for this amount of turns; 0 means do not grow
 }
 
 impl World {
@@ -147,6 +153,15 @@ impl World {
                     step_ok = StepOk::AteFood;
                     add_food = true;
                 }
+                Thing::Mystery => {
+                    let mut rng = rand::thread_rng();
+                    if rng.sample(Uniform::new(0.0, 1.0)) < 0.5 {
+                        self.score += MYSTERY_SCORE;
+                    } else {
+                        self.grow += MYSTERY_GROW_SNAKE;
+                    }
+                    step_ok = StepOk::AteMystery;
+                }
                 Thing::Obstacle => {
                     return Err(StepError::Obstacle);
                 }
@@ -176,6 +191,7 @@ impl World {
             self.add_food();
         }
         self.maybe_add_obstacle();
+        self.maybe_add_mystery();
 
         Ok(step_ok)
     }
@@ -227,6 +243,21 @@ impl World {
             x,
             y,
             lifetime: Some(OBSTACLE_LIFETIME),
+        });
+    }
+
+    fn maybe_add_mystery(&mut self) {
+        let mut rng = rand::thread_rng();
+        if rng.sample(Uniform::new(0.0, 1.0)) > MYSTERY_P {
+            return;
+        }
+        let (x, y) = self.empty_spot();
+        self.things.push(ThingInField {
+            what: Thing::Mystery,
+            picture_index: rng.gen_range(0..4),
+            x,
+            y,
+            lifetime: Some(MYSTERY_LIFETIME),
         });
     }
 }
