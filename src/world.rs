@@ -33,13 +33,14 @@ const SNAKE_INIT_X: u32 = FIELD_SIZE / 2;
 const SNAKE_INIT_Y: u32 = FIELD_SIZE / 2;
 const SNAKE_INIT_DIR: Direction = Direction::Up;
 
-#[derive(PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Thing {
     Food,
     Mystery,
     Obstacle,
 }
 
+#[derive(Clone, Debug)]
 pub struct ThingInField {
     pub what: Thing,
     pub picture_index: usize,
@@ -91,7 +92,6 @@ impl World {
     pub fn step(&mut self) -> Result<StepOk, StepError> {
         let (mut next_x, mut next_y) = self.snake[0];
         let mut step_ok = StepOk::Nothing;
-        let mut add_food = false;
 
         match self.snake_dir {
             Direction::Up => {
@@ -123,54 +123,9 @@ impl World {
                 }
             }
         };
-        // Check if we ate something and update lifetimes
-        let mut extra: Vec<usize> = vec![];
-        for (idx, thing) in self.things.iter_mut().enumerate() {
-            match thing.lifetime {
-                Some(0) =>
-                // the thing is expired
-                {
-                    extra.push(idx);
-                    if thing.what == Thing::Food {
-                        add_food = true;
-                    }
-                    continue; // if the thing is expired, do not check if we ate it
-                }
-                Some(n) => {
-                    thing.lifetime = Some(n - 1);
-                }
-                _ => {}
-            }
 
-            if thing.x != next_x || thing.y != next_y {
-                continue;
-            }
-            extra.push(idx);
-            match thing.what {
-                Thing::Food => {
-                    self.score += 1;
-                    self.grow += 3;
-                    step_ok = StepOk::AteFood;
-                    add_food = true;
-                }
-                Thing::Mystery => {
-                    let mut rng = rand::thread_rng();
-                    if rng.sample(Uniform::new(0.0, 1.0)) < 0.5 {
-                        self.score += MYSTERY_SCORE;
-                    } else {
-                        self.grow += MYSTERY_GROW_SNAKE;
-                    }
-                    step_ok = StepOk::AteMystery;
-                }
-                Thing::Obstacle => {
-                    return Err(StepError::Obstacle);
-                }
-            };
-        }
+        // Start by moving a snake so when we create new things snake position is updated
 
-        for (offset, r) in extra.iter().enumerate() {
-            self.things.swap_remove(r - offset);
-        }
         // Maybe shrink snake
         if self.grow == 0 {
             self.snake.pop();
@@ -187,9 +142,60 @@ impl World {
         }
         self.snake.insert(0, (next_x, next_y));
 
-        if add_food {
-            self.add_food();
+        // Now go through things, check if we hit something, update lifetimes
+        let mut deleted = 0;
+        for (idx, thing) in self.things.clone().iter_mut().enumerate() {
+            match thing.lifetime {
+                Some(0) =>
+                // the thing is expired
+                {
+                    if thing.what == Thing::Food {
+                        self.add_food();
+                    }
+                    self.things.remove(idx - deleted);
+                    deleted += 1;
+                    continue; // if the thing is expired, do not check if we hit it
+                }
+                _ if thing.x == next_x && thing.y == next_y => {
+                    // we hit it
+                    self.things.remove(idx - deleted);
+                    deleted += 1;
+                    match thing.what {
+                        Thing::Obstacle => {
+                            return Err(StepError::Obstacle);
+                        }
+                        Thing::Food => {
+                            self.score += 1;
+                            self.grow += 3;
+                            step_ok = StepOk::AteFood;
+                            self.add_food();
+                        }
+                        Thing::Mystery => {
+                            let mut rng = rand::thread_rng();
+                            if rng.sample(Uniform::new(0.0, 1.0)) < 0.5 {
+                                self.score += MYSTERY_SCORE;
+                            } else {
+                                self.grow += MYSTERY_GROW_SNAKE;
+                            }
+                            step_ok = StepOk::AteMystery;
+                        }
+                    }
+                }
+                Some(n) => {
+                    // We did not hit it
+                    self.things.remove(idx - deleted);
+                    deleted += 1;
+                    self.things.push(ThingInField {
+                        lifetime: Some(n - 1),
+                        ..thing.clone()
+                    });
+                    continue;
+                    // we hit it
+                }
+                _ => {}
+            }
         }
+
         self.maybe_add_obstacle();
         self.maybe_add_mystery();
 
