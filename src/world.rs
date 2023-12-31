@@ -11,6 +11,8 @@ pub const MYSTERY_GROW_SNAKE: u32 = 15;
 pub const LEAN_P: f32 = 0.5;
 pub const LEAN_AFTER_FOOD: u32 = 5;
 pub const LEAN_LIFETIME: u32 = 60;
+pub const FAT_P: f32 = 0.1;
+pub const FAT_GROW_SNAKE: u32 = 6;
 
 pub enum StepError {
     Obstacle,
@@ -38,6 +40,7 @@ const SNAKE_INIT_DIR: Direction = Direction::Up;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Thing {
+    Fat,
     Food,
     Lean,
     Mystery,
@@ -183,6 +186,13 @@ impl World {
                             step_ok = StepOk::AteFood;
                             self.add_food();
                         }
+                        Thing::Fat => {
+                            self.eaten_food += 1;
+                            self.score += 1;
+                            self.grow += FAT_GROW_SNAKE;
+                            step_ok = StepOk::AteFood;
+                            self.add_food();
+                        }
                         Thing::Lean => {
                             self.eaten_food = 0;
                             self.score += 1;
@@ -253,6 +263,17 @@ impl World {
             });
             return;
         }
+        if rng.sample(Uniform::new(0.0, 1.0)) < FAT_P {
+            self.things.push(ThingInField {
+                what: Thing::Fat,
+                picture_index: rng.gen_range(0..3),
+                x,
+                y,
+                lifetime: None,
+            });
+            return;
+        }
+
         let lifetime = if x == 1 || y == 1 || x == FIELD_SIZE || y == FIELD_SIZE {
             None
         } else {

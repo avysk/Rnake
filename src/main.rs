@@ -38,7 +38,7 @@ pub fn main() {
         }
     }
 
-    let mut quit_msg = "You have exted the game.";
+    let mut quit_msg = "You have exited the game.";
 
     'game: loop {
         let mut w = World::init();
@@ -143,6 +143,9 @@ pub fn main() {
                 match t.what {
                     Thing::Food => {
                         sdl.food(&t.picture_index, &t.x, &t.y);
+                    }
+                    Thing::Fat => {
+                        sdl.fat(&t.picture_index, &t.x, &t.y);
                     }
                     Thing::Lean => {
                         sdl.lean(&t.picture_index, &t.x, &t.y);
