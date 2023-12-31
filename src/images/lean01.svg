@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs/>
+<clipPath id="ArtboardFrame">
+<rect height="1024" width="1024" x="0" y="0"/>
+</clipPath>
+<g clip-path="url(#ArtboardFrame)" id="Layer-1" vectornator:layerName="Layer 1">
+<path d="M505.852 307.565L608.674 251.224L671.777 166.234L698.07 45.4585L642.855 59.9963L573.61 102.206L520.154 198.665L505.852 307.565Z" fill="#6a884e" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 4"/>
+<path d="M504.187 53.7401L530.757 45.6034L533.414 304.621L510.032 301.909" fill="#6f3a1a" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 5"/>
+<path d="M570.26 245.853L644.229 225.224L718.198 221.098L805.822 265.107L897.999 371.002L931 505.777L924.172 648.804L839.962 856.468L773.959 966.489L694.3 1018.75L631.711 1025.62L509.947 976.115L400.701 1027L310.801 1010.5L250.488 951.361L197.003 828.963L142.38 670.808L131 509.903L157.174 375.127L208.383 300.863L270.972 232.1L382.494 196.344L467.842 223.849L514.499 265.107L570.26 245.853Z" fill="#e50e19" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 1"/>
+<path d="M644.229 225.224L735.267 278.859L795.58 350.373L849.065 428.762L892.309 530.532L924.172 648.804L931 505.777L897.999 371.002L805.822 265.107L718.198 221.098" fill="#f85e66" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 2"/>
+<path d="M400.701 1027L328.416 939.011L258.301 837.247L212.727 720.944L167.152 601.287L131 509.903L142.38 670.808L250.488 951.361L310.801 1010.5L400.701 1027Z" fill="#ac0e17" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 3"/>
+</g>
+</svg>

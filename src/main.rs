@@ -144,6 +144,9 @@ pub fn main() {
                     Thing::Food => {
                         sdl.food(&t.picture_index, &t.x, &t.y);
                     }
+                    Thing::Lean => {
+                        sdl.lean(&t.picture_index, &t.x, &t.y);
+                    }
                     Thing::Mystery => {
                         sdl.mystery(&t.picture_index, &t.x, &t.y);
                     }

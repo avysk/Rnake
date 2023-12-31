@@ -8,6 +8,9 @@ pub const MYSTERY_P: f32 = 0.0025;
 pub const MYSTERY_LIFETIME: u32 = 120;
 pub const MYSTERY_SCORE: u32 = 5;
 pub const MYSTERY_GROW_SNAKE: u32 = 15;
+pub const LEAN_P: f32 = 0.5;
+pub const LEAN_AFTER_FOOD: u32 = 5;
+pub const LEAN_LIFETIME: u32 = 60;
 
 pub enum StepError {
     Obstacle,
@@ -36,6 +39,7 @@ const SNAKE_INIT_DIR: Direction = Direction::Up;
 #[derive(Clone, Debug, PartialEq)]
 pub enum Thing {
     Food,
+    Lean,
     Mystery,
     Obstacle,
 }
@@ -57,6 +61,7 @@ pub struct World {
     pub things: Vec<ThingInField>,
     pub score: u32,
     grow: u32, // grow for this amount of turns; 0 means do not grow
+    eaten_food: u32,
 }
 
 impl World {
@@ -71,6 +76,7 @@ impl World {
             things: vec![],
             grow: 0,
             score: 0,
+            eaten_food: 0,
         };
         w.add_food();
         w
@@ -149,7 +155,7 @@ impl World {
                 Some(0) =>
                 // the thing is expired
                 {
-                    if thing.what == Thing::Food {
+                    if thing.what == Thing::Food || thing.what == Thing::Lean {
                         self.add_food();
                     }
                     self.things.remove(idx - deleted);
@@ -165,8 +171,15 @@ impl World {
                             return Err(StepError::Obstacle);
                         }
                         Thing::Food => {
+                            self.eaten_food += 1;
                             self.score += 1;
                             self.grow += 3;
+                            step_ok = StepOk::AteFood;
+                            self.add_food();
+                        }
+                        Thing::Lean => {
+                            self.eaten_food = 0;
+                            self.score += 1;
                             step_ok = StepOk::AteFood;
                             self.add_food();
                         }
@@ -222,6 +235,17 @@ impl World {
 
     fn add_food(&mut self) {
         let (x, y) = self.empty_spot();
+        let mut rng = rand::thread_rng();
+        if self.eaten_food >= LEAN_AFTER_FOOD && rng.sample(Uniform::new(0.0, 1.0)) < LEAN_P {
+            self.things.push(ThingInField {
+                what: Thing::Lean,
+                picture_index: rng.gen_range(0..3),
+                x,
+                y,
+                lifetime: Some(LEAN_LIFETIME),
+            });
+            return;
+        }
         let lifetime = if x == 1 || y == 1 || x == FIELD_SIZE || y == FIELD_SIZE {
             None
         } else {
