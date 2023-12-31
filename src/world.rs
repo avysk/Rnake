@@ -193,6 +193,7 @@ impl World {
                             let mut rng = rand::thread_rng();
                             if rng.sample(Uniform::new(0.0, 1.0)) < 0.5 {
                                 self.score += MYSTERY_SCORE;
+                                self.eaten_food += 1;
                             } else {
                                 self.grow += MYSTERY_GROW_SNAKE;
                             }
