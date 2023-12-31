@@ -89,6 +89,12 @@ impl World {
             if self.snake.contains(&(x, y)) {
                 continue;
             }
+            // prevent things appearing next to snake
+            let hx = self.snake[0].0;
+            let hy = self.snake[0].1;
+            if x < hx + 3 && y < hy + 3 && x > hx.saturating_sub(3) && y > hy.saturating_sub(3) {
+                continue;
+            }
             if self.things.iter().any(|t| t.x == x && t.y == y) {
                 continue;
             }
