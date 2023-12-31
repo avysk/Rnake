@@ -1,5 +1,7 @@
+3.0.0
+- add "lean" food (score plus one, length does not increase)
+- add "fat" food (score plus one, length increase is more than usual food)
 2.0.0
-
 - Show obstacles on the field
 - Show mystery items on the field (either increases score or snake's length)
 - Prevent food on the border of the field (it is hard to collect) from disappearing with time
