@@ -3,11 +3,14 @@
 <!-- Created with Vectornator (http://vectornator.io/) -->
 <svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
 <defs/>
-<g id="Layer-1" vectornator:layerName="Layer 1">
-<path d="M513.299 190.714L560.427 184.383L613.268 202.584L661.111 257.978L702.527 437.614L749.655 572.142L819.634 688.47L826.775 786.597L799.64 895.011L738.23 974.937L628.264 1012.13L468.312 1024L350.491 981.267L270.515 895.802L235.526 829.329L236.24 720.124L251.95 645.737L309.075 561.855L353.347 468.476L382.624 375.097L434.751 254.813L468.312 216.037L513.299 190.714Z" fill="#9ba61c" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 1"/>
-<path d="M773.934 747.029L749.655 659.19L709.668 586.386L678.248 542.071L669.68 607.753L703.241 691.635C703.241 691.635 720.379 750.195 726.091 767.604C731.804 785.014 731.09 859.4 731.09 859.4L733.946 905.298L769.649 838.034L773.22 788.971L773.934 747.029Z" fill="#a5a4a2" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 2"/>
-<path d="M276.942 678.974L268.373 793.719L307.647 893.428L359.774 952.779L418.328 979.685L466.17 989.181L402.618 916.377L338.352 815.876L304.791 701.923L310.503 623.58L276.942 678.974Z" fill="#436557" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 3"/>
-<path d="M498.66 232.655C498.66 214.736 522.798 200.21 552.572 200.21C582.347 200.21 606.485 214.736 606.485 232.655C606.485 250.574 582.347 265.1 552.572 265.1C522.798 265.1 498.66 250.574 498.66 232.655Z" fill="#402217" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Oval 1"/>
-<path d="M557.571 0L539.719 227.116L561.855 233.447L573.28 6.33076L557.571 0Z" fill="#9d521b" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 4"/>
+<clipPath id="ArtboardFrame">
+<rect height="1024" width="1024" x="0" y="0"/>
+</clipPath>
+<g clip-path="url(#ArtboardFrame)" id="Layer-1" vectornator:layerName="Layer 1">
+<path d="M540.713 129.662L592.492 122.841L650.549 142.451L703.113 202.132L748.616 395.668L800.396 540.607L877.281 665.937L885.127 771.657L855.314 888.461L787.843 974.572L667.024 1014.64L491.287 1027.43L361.837 981.393L273.968 889.314L235.526 817.697L236.31 700.04L253.57 619.897L316.334 529.524L364.975 428.919L397.142 328.314L454.413 198.721L491.287 156.945L540.713 129.662Z" fill="#e8b407" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 1"/>
+<path d="M827.071 729.028L800.396 634.391L756.462 555.954L721.942 508.209L712.527 578.973L749.401 669.347C749.401 669.347 768.23 732.439 774.506 751.195C780.783 769.952 779.998 850.095 779.998 850.095L783.136 899.545L822.363 827.075L826.286 774.215L827.071 729.028Z" fill="#a5a4a2" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 2"/>
+<path d="M281.029 655.706L271.615 779.331L314.765 886.756L372.036 950.7L436.369 979.688L488.933 989.919L419.109 911.481L348.5 803.203L311.626 680.431L317.903 596.025L281.029 655.706Z" fill="#436557" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 3"/>
+<path d="M524.63 174.849C524.63 155.543 551.149 139.893 583.863 139.893C616.576 139.893 643.095 155.543 643.095 174.849C643.095 194.154 616.576 209.805 583.863 209.805C551.149 209.805 524.63 194.154 524.63 174.849Z" fill="#402217" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Oval 1"/>
+<path d="M588.153-2.13163e-14L564.617 174.849L598.524 180.396L621.276 3.12258L588.153-2.13163e-14Z" fill="#9d521b" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 4"/>
 </g>
 </svg>
