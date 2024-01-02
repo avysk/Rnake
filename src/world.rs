@@ -26,8 +26,8 @@ pub enum StepOk {
     AteMystery,
 }
 
-#[derive(Debug)]
-enum Direction {
+#[derive(Clone, Debug, PartialEq)]
+pub enum Direction {
     Up,
     Down,
     Left,
@@ -37,6 +37,20 @@ enum Direction {
 const SNAKE_INIT_X: u32 = FIELD_SIZE / 2;
 const SNAKE_INIT_Y: u32 = FIELD_SIZE / 2;
 const SNAKE_INIT_DIR: Direction = Direction::Up;
+
+#[derive(Debug)]
+pub struct Coords {
+    pub x: u32,
+    pub y: u32,
+}
+
+#[derive(Debug)]
+pub struct SnakeCell {
+    pub dir: Direction,
+    pub prev_dir: Direction,
+    pub coords: Coords,
+    pub even: bool,
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Thing {
@@ -58,8 +72,7 @@ pub struct ThingInField {
 }
 
 pub struct World {
-    pub snake: Vec<(u32, u32)>,
-    snake_dir: Direction,
+    pub snake: Vec<SnakeCell>,
     // what is it, index of the corresponding picture, coordinates, possible lifetime
     pub things: Vec<ThingInField>,
     pub score: u32,
@@ -71,11 +84,34 @@ impl World {
     pub fn init() -> Self {
         let mut w = World {
             snake: vec![
-                (SNAKE_INIT_X, SNAKE_INIT_Y),
-                (SNAKE_INIT_X, SNAKE_INIT_Y + 1),
-                (SNAKE_INIT_X, SNAKE_INIT_Y + 2),
+                SnakeCell {
+                    dir: SNAKE_INIT_DIR,
+                    prev_dir: SNAKE_INIT_DIR,
+                    coords: Coords {
+                        x: SNAKE_INIT_X,
+                        y: SNAKE_INIT_Y,
+                    },
+                    even: false,
+                },
+                SnakeCell {
+                    dir: SNAKE_INIT_DIR,
+                    prev_dir: SNAKE_INIT_DIR,
+                    coords: Coords {
+                        x: SNAKE_INIT_X,
+                        y: SNAKE_INIT_Y + 1,
+                    },
+                    even: true,
+                },
+                SnakeCell {
+                    dir: SNAKE_INIT_DIR,
+                    prev_dir: SNAKE_INIT_DIR,
+                    coords: Coords {
+                        x: SNAKE_INIT_X,
+                        y: SNAKE_INIT_Y + 2,
+                    },
+                    even: false,
+                },
             ],
-            snake_dir: SNAKE_INIT_DIR,
             things: vec![],
             grow: 0,
             score: 0,
@@ -86,29 +122,35 @@ impl World {
     }
     fn empty_spot(&self) -> (u32, u32) {
         let mut rng = rand::thread_rng();
-        loop {
+        'looking: loop {
             let x = rng.gen_range(0..FIELD_SIZE) + 1;
             let y = rng.gen_range(0..FIELD_SIZE) + 1;
-            if self.snake.contains(&(x, y)) {
-                continue;
+            if self
+                .snake
+                .iter()
+                .any(|s| s.coords.x == x && s.coords.y == y)
+            {
+                continue 'looking;
             }
             // prevent things appearing next to snake
-            let hx = self.snake[0].0;
-            let hy = self.snake[0].1;
+            let hx = self.snake[0].coords.x;
+            let hy = self.snake[0].coords.y;
             if x < hx + 3 && y < hy + 3 && x > hx.saturating_sub(3) && y > hy.saturating_sub(3) {
-                continue;
+                continue 'looking;
             }
             if self.things.iter().any(|t| t.x == x && t.y == y) {
-                continue;
+                continue 'looking;
             }
             return (x, y);
         }
     }
     pub fn step(&mut self) -> Result<StepOk, StepError> {
-        let (mut next_x, mut next_y) = self.snake[0];
+        let c = &self.snake[0].coords;
+        let mut next_x = c.x;
+        let mut next_y = c.y;
         let mut step_ok = StepOk::Nothing;
 
-        match self.snake_dir {
+        match self.snake[0].dir {
             Direction::Up => {
                 if next_y > 1 {
                     next_y -= 1;
@@ -152,10 +194,28 @@ impl World {
             self.grow -= 1;
         }
         // Check if we hit snake
-        if self.snake.contains(&(next_x, next_y)) {
+        if self
+            .snake
+            .iter()
+            .any(|s| s.coords.x == next_x && s.coords.y == next_y)
+        {
             return Err(StepError::SelfHit);
         }
-        self.snake.insert(0, (next_x, next_y));
+        let dir = self.snake[0].dir.clone();
+        let prev_dir = self.snake[0].dir.clone();
+        let even = !self.snake[0].even;
+        self.snake.insert(
+            0,
+            SnakeCell {
+                dir,
+                prev_dir,
+                even,
+                coords: Coords {
+                    x: next_x,
+                    y: next_y,
+                },
+            },
+        );
 
         // Now go through things, check if we hit something, update lifetimes
         let mut deleted = 0;
@@ -233,21 +293,23 @@ impl World {
     }
 
     pub fn turn_left(&mut self) {
-        self.snake_dir = match self.snake_dir {
+        let dir = match self.snake[0].dir {
             Direction::Down => Direction::Right,
             Direction::Right => Direction::Up,
             Direction::Up => Direction::Left,
             Direction::Left => Direction::Down,
         };
+        self.snake[0].dir = dir;
     }
 
     pub fn turn_right(&mut self) {
-        self.snake_dir = match self.snake_dir {
+        let dir = match self.snake[0].dir {
             Direction::Down => Direction::Left,
             Direction::Right => Direction::Down,
             Direction::Up => Direction::Right,
             Direction::Left => Direction::Up,
         };
+        self.snake[0].dir = dir;
     }
 
     fn add_food(&mut self) {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<filter color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse" height="231.446" id="Filter" width="973.756" x="-3.72294" y="396.277">
+<feGaussianBlur in="SourceGraphic" result="Blur" stdDeviation="1.48918"/>
+</filter>
+</defs>
+<clipPath id="ArtboardFrame">
+<rect height="1024" width="1024" x="0" y="0"/>
+</clipPath>
+<g clip-path="url(#ArtboardFrame)" id="Layer-1" vectornator:layerName="Layer 1">
+<path d="M0 400L442.426 466.422L966.31 518.749L632.209 548.905L361.251 568.942L0 624L0 400Z" fill="#a5a4a2" fill-rule="nonzero" filter="url(#Filter)" opacity="1" stroke="none" vectornator:blur="2.97835" vectornator:layerName="Curve 1"/>
+</g>
+</svg>

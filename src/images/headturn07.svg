@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs/>
+<g id="Layer-1" vectornator:layerName="Layer 1">
+<path d="M1024 400L819.695 400.068L585.448 472.551L572.782 409.681L680.782 314.533L681.851 226.517L633.145 160.029L571.418 91.6779L463.435 93.8205L392.359 181.577L375.524 291.762L408.21 356.419L487.66 398.581L499.326 461.461L506.897 515.384L582.284 551.589C582.284 551.589 724.298 552.086 735.276 549.97C746.254 547.854 888.606 580.349 888.606 580.349L1024 624L1024 400Z" fill="#a5a2a2" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 1"/>
+<path d="M593.036 244.458C604.081 244.341 613.129 253.2 613.246 264.245C613.363 275.29 604.504 284.339 593.459 284.455C582.414 284.572 573.365 275.713 573.248 264.668C573.131 253.623 581.99 244.575 593.036 244.458Z" fill="#150b14" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Oval 2"/>
+<path d="M453.054 246.939C464.099 246.822 473.148 255.681 473.264 266.726C473.381 277.771 464.522 286.82 453.477 286.937C442.432 287.054 433.384 278.194 433.267 267.149C433.15 256.104 442.009 247.056 453.054 246.939Z" fill="#150b14" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Oval 1"/>
+<path d="M545.726 120.951L471.73 121.734" fill="none" opacity="1" stroke="#150b14" stroke-linecap="butt" stroke-linejoin="round" stroke-width="10" vectornator:layerName="Line 1"/>
+<path d="M522.738 122.195L521.135 65.2084L540.531 8L491.084 60.5261L464.757 29.8029L470.201 71.7477L498.665 115.449" fill="#e50e19" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 2"/>
+</g>
+</svg>

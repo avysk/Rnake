@@ -29,6 +29,9 @@ None.
 - Better graphics.
 - Windows installer.
 - Customizable controls.
+- Initial screen with ability to choose game speed.
+- Different levels.
+- Ability to jump to certain level by entering the corresponding password.
 - ...
 
 ## Bugs
