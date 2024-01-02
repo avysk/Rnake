@@ -1,3 +1,5 @@
+4.0.0
+- draw snake using pictures
 3.0.0
 - add "lean" food (score plus one, length does not increase)
 - add "fat" food (score plus one, length increase is more than usual food)
