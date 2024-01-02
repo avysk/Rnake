@@ -46,11 +46,10 @@ macro_rules! load_one_image {
             resvg::tiny_skia::Transform::from_scale(scale, scale),
             &mut pixmap.as_mut(),
         );
-        // Pixmaps in the vector in the reverse order! Who cares.
         $pixmaps
             .entry(stringify!($name).to_string())
             .or_insert(vec![])
-            .push(pixmap);
+            .insert(0, pixmap);
     }};
 }
 
@@ -200,7 +199,7 @@ impl<'a> SDLWrapper<'a> {
 
         let pixmaps = create_pixmaps(&cell);
 
-        load_images!(fat 3, food 3, lean 3, mystery 4, obstacle 3, wall 1);
+        load_images!(body 8, fat 3, food 3, headturn 8, headstraight 4, lean 3, mystery 4, obstacle 3, tail 4, wall 1);
 
         Self {
             events,
@@ -215,15 +214,6 @@ impl<'a> SDLWrapper<'a> {
             pixmaps,
         }
     }
-    pub fn rect(&mut self, x: &u32, y: &u32, c: &Color) {
-        let rx = self.border_x + self.cell * *x;
-        let ry = self.border_y + self.cell * *y;
-        let rect = rect!(rx, ry, self.cell, self.cell);
-        self.canvas.set_draw_color(*c);
-        self.canvas
-            .fill_rect(rect)
-            .expect("SDL error: cannot draw rectangle");
-    }
 
     pub fn clear(&mut self) {
         self.canvas.set_draw_color(Color::BLACK);
@@ -235,9 +225,9 @@ impl<'a> SDLWrapper<'a> {
     pub fn window(&self) -> Option<&Window> {
         Some(self.canvas.window())
     }
-    pub fn messages(&mut self, msgs: Vec<&str>) {
+    pub fn messages(&mut self, messages: Vec<&str>) {
         self.clear();
-        let surfaces = msgs.iter().map(|line| {
+        let surfaces = messages.iter().map(|line| {
             self.font
                 .render(line)
                 .solid(Color::BLUE)
@@ -250,7 +240,7 @@ impl<'a> SDLWrapper<'a> {
                 .expect("Should be able to create texture from surface")
         });
         let heights: u32 = textures.clone().map(|texture| texture.query().height).sum();
-        let total_height = heights + (msgs.len() as u32 - 1) * LINE_INTERVAL;
+        let total_height = heights + (messages.len() as u32 - 1) * LINE_INTERVAL;
         let (win_width, win_height) = self
             .window()
             .expect("Should be able to get window corresponding to the texture")

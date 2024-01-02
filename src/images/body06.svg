@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs/>
+<g id="Layer-1" vectornator:layerName="Layer 1">
+<path d="M624 2.66454e-14C624 2.66454e-14 627.375 66.6465 628.377 115C629.379 163.353 637.913 238.284 681.68 278.637C725.507 319.045 724.671 322.387 777.765 347.985C809.821 363.44 859.636 397.806 913.377 400C976.997 402.597 1024 400 1024 400L1024 624C1024 624 988.315 622.87 913.377 624C853.191 624.908 812.145 613.369 752.699 591.12C675.376 562.181 602.455 510.43 580.582 492.783C543.364 462.754 494.068 426.827 467.788 380.57C442.036 335.245 406.255 227.256 404.377 115C403.453 59.7312 400 0 400 0L624 2.66454e-14Z" fill="#a5a4a2" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 1"/>
+</g>
+</svg>

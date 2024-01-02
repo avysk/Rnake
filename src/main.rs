@@ -6,11 +6,10 @@ use std::cmp::min;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
 
 use sdlwrapper::SDLWrapper;
-use world::{StepError, StepOk, Thing, World, FIELD_SIZE};
+use world::{Direction, StepError, StepOk, Thing, World, FIELD_SIZE};
 
 const FRAME_DELTA: Uint64 = 60;
 // update screen after the given number of SDL ticks
@@ -126,17 +125,88 @@ pub fn main() {
                 sdl.wall(&0, &(FIELD_SIZE + 1), &b);
             }
 
+            let l = w.snake.len() - 1;
+            assert!(
+                l >= 2,
+                "Programming error: the snake cannot be shorter than 3"
+            );
+
             // draw the snake head
-            let (hx, hy) = w
+            let head = w
                 .snake
                 .first()
                 .expect("Programming error: a snake cannot be empty");
-            sdl.rect(hx, hy, &Color::GREEN);
-
-            // draw rest of the snake
-            for (bx, by) in &w.snake[1..] {
-                sdl.rect(bx, by, &Color::GRAY);
+            if head.dir == head.prev_dir {
+                sdl.headstraight(
+                    match head.dir {
+                        Direction::Down => &0,
+                        Direction::Up => &1,
+                        Direction::Left => &2,
+                        Direction::Right => &3,
+                    },
+                    &head.coords.x,
+                    &head.coords.y,
+                );
+            } else {
+                sdl.headturn(
+                    match (&head.dir, &head.prev_dir) {
+                        (&Direction::Left, &Direction::Down) => &0,
+                        (&Direction::Right, &Direction::Down) => &1,
+                        (&Direction::Left, &Direction::Up) => &2,
+                        (&Direction::Right, &Direction::Up) => &3,
+                        (&Direction::Up, &Direction::Right) => &4,
+                        (&Direction::Down, &Direction::Right) => &5,
+                        (&Direction::Up, &Direction::Left) => &6,
+                        (&Direction::Down, &Direction::Left) => &7,
+                        _ => unreachable!("Programming error"),
+                    },
+                    &head.coords.x,
+                    &head.coords.y,
+                );
             }
+
+            // draw the body of the snake
+            for s in &w.snake[1..l] {
+                sdl.body(
+                    match (&s.dir, &s.prev_dir, &s.even) {
+                        (&Direction::Up, &Direction::Up, &false)
+                        | (&Direction::Down, &Direction::Down, &true) => &0,
+                        (&Direction::Up, &Direction::Up, &true)
+                        | (&Direction::Down, &Direction::Down, &false) => &1,
+                        (&Direction::Left, &Direction::Left, &false)
+                        | (&Direction::Right, &Direction::Right, &true) => &2,
+                        (&Direction::Left, &Direction::Left, &true)
+                        | (&Direction::Right, &Direction::Right, &false) => &3,
+                        (&Direction::Up, &Direction::Right, _)
+                        | (&Direction::Left, &Direction::Down, _) => &4,
+                        (&Direction::Up, &Direction::Left, _)
+                        | (&Direction::Right, &Direction::Down, _) => &5,
+                        (&Direction::Down, &Direction::Right, _)
+                        | (&Direction::Left, &Direction::Up, _) => &6,
+                        (&Direction::Down, &Direction::Left, _)
+                        | (&Direction::Right, &Direction::Up, _) => &7,
+                        _ => unreachable!("Programming error"),
+                    },
+                    &s.coords.x,
+                    &s.coords.y,
+                );
+            }
+
+            // draw the tail of the snake
+            let tail = w
+                .snake
+                .last()
+                .expect("Programming error: a snake cannot be empty");
+            sdl.tail(
+                match tail.dir {
+                    Direction::Up => &0,
+                    Direction::Down => &1,
+                    Direction::Left => &2,
+                    Direction::Right => &3,
+                },
+                &tail.coords.x,
+                &tail.coords.y,
+            );
 
             // Draw the things
             for t in &(w.things) {
