@@ -3,7 +3,6 @@ mod sound;
 mod widgets;
 mod world;
 
-use std::cmp::min;
 use std::process::exit;
 
 use sdl2::event::Event;
@@ -31,7 +30,6 @@ impl Default for RnakeConfig {
         }
     }
 }
-const WAIT: Uint64 = 20;
 
 pub fn main() {
     let ttf_context = sdl2::ttf::init().expect("Should be able to construct TTF context");
@@ -68,9 +66,9 @@ pub fn main() {
     confy::store("Rnake", None, cfg).expect("There should be no confy error when saving config.");
     let play_level = level_chooser.result() + 1;
     let frame_delta = match speed_chooser.result() {
-        0 => 120,
-        1 => 60,
-        2 => 30,
+        0 => 180,
+        1 => 120,
+        2 => 90,
         _ => panic!("Programming error: unknown speed level."),
     };
 
@@ -114,17 +112,6 @@ pub fn main() {
                         }
                     }
                     _ => {}
-                }
-            }
-
-            // check if we are at the right moment
-            unsafe {
-                if SDL_GetTicks64() < next_frame {
-                    SDL_Delay(min(
-                        WAIT as Uint32,
-                        (next_frame - SDL_GetTicks64()) as Uint32,
-                    ));
-                    continue 'running;
                 }
             }
 
@@ -275,6 +262,13 @@ pub fn main() {
 
             sdl.score(w.score);
             sdl.present();
+
+            // check if we are at the right moment
+            unsafe {
+                if SDL_GetTicks64() < next_frame {
+                    SDL_Delay((next_frame - SDL_GetTicks64()) as Uint32);
+                }
+            }
 
             next_frame = unsafe { SDL_GetTicks64() } + frame_delta;
             turned = false;
