@@ -10,11 +10,10 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
 
-use crate::widgets::{DialogResult, DialogReturn, Menu, Message};
+use crate::widgets::{Choice, DialogResult, DialogReturn, Menu, Message, Widget};
 use sdlwrapper::SDLWrapper;
 use world::{Direction, StepError, StepOk, Thing, World, FIELD_SIZE};
 
-const FRAME_DELTA: Uint64 = 60;
 // update screen after the given number of SDL ticks
 const WAIT: Uint64 = 20;
 
@@ -24,12 +23,23 @@ pub fn main() {
 
     sdl.sounds.start();
     let mut start = Message::new("Press SPACE to start the game.".to_string());
-    let mut menu = Menu::new(vec![&mut start]);
+    let mut speed = Choice::new(
+        "Speed".to_string(),
+        vec!["slow".to_string(), "normal".to_string(), "fast".to_string()],
+        1,
+    );
+    let mut menu = Menu::new(vec![&mut start, &mut speed]);
     let result = menu.run(&mut sdl);
     match result {
         DialogReturn::Result(DialogResult::OK) => {}
         _ => exit(0),
     }
+    let frame_delta = match speed.result() {
+        0 => 120,
+        1 => 60,
+        2 => 30,
+        _ => panic!("Programming error: unknown speed level."),
+    };
 
     let mut quit_msg = "You have exited the game.";
 
@@ -228,7 +238,7 @@ pub fn main() {
             sdl.score(w.score);
             sdl.present();
 
-            next_frame = unsafe { SDL_GetTicks64() } + FRAME_DELTA;
+            next_frame = unsafe { SDL_GetTicks64() } + frame_delta;
             turned = false;
         }
         let mut w1 = Message::new(quit_msg.to_string());

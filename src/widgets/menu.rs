@@ -31,13 +31,15 @@ impl<'a> Menu<'a> {
         loop {
             let mut messages = vec![];
             let mut current = 0;
-            for w in self.widgets.iter() {
+            let mut activated_index = None;
+            for (idx, w) in self.widgets.iter().enumerate() {
                 let s = w.present();
                 let mut repr = s.to_string();
                 if total > 0 {
                     if w.can_activate() {
                         if activated == current {
-                            repr = "> ".to_owned() + s;
+                            repr = "- ".to_owned() + s;
+                            activated_index = Some(idx);
                         } else {
                             current += 1;
                         }
@@ -65,7 +67,7 @@ impl<'a> Menu<'a> {
                     Event::KeyDown {
                         keycode: Some(Keycode::Space),
                         ..
-                    } if total == 0 => {
+                    } => {
                         return DialogReturn::Result(DialogResult::OK);
                     }
                     Event::KeyDown {
@@ -75,9 +77,11 @@ impl<'a> Menu<'a> {
                         return DialogReturn::Result(DialogResult::CANCEL);
                     }
                     _ if total > 0 => {
-                        let result = self.widgets[activated].feed(event);
+                        let number = activated_index
+                            .expect("Programming error: there should be an activated widget.");
+                        let result = self.widgets[number].feed(event);
                         if result {
-                            return DialogReturn::Index(activated);
+                            return DialogReturn::Index(number);
                         }
                     }
                     _ => {}
