@@ -1,3 +1,4 @@
+use resvg::tiny_skia::PixmapPaint;
 use std::cmp::min;
 use std::collections::HashMap;
 
@@ -5,7 +6,7 @@ use resvg::usvg::TreeParsing;
 use resvg::Tree;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect;
-use sdl2::render::{Canvas, TextureAccess, TextureQuery};
+use sdl2::render::{BlendMode, Canvas, TextureAccess, TextureQuery};
 use sdl2::rwops::RWops;
 use sdl2::sys::{SDL_ShowCursor, SDL_DISABLE};
 use sdl2::ttf::{Font, Sdl2TtfContext};
@@ -13,6 +14,7 @@ use sdl2::video::Window;
 use sdl2::{pixels::Color, EventPump};
 
 use crate::sound::{Player, Sounds};
+use crate::world::FIELD_SIZE;
 
 /// This macro creates SDL2 Rect, casting the arguments to the appropriate types
 macro_rules! rect {
@@ -42,10 +44,18 @@ macro_rules! load_one_image {
             resvg::tiny_skia::Pixmap::new(cell, cell).expect("Should be able to create pixmap");
         let scale = cell as f32 / f32::max(rtree.size.width(), rtree.size.height());
         rtree.render(
-            // no, this does not make sense
             resvg::tiny_skia::Transform::from_scale(scale, scale),
             &mut pixmap.as_mut(),
         );
+        let data = pixmap.data_mut();
+        for i in 0..(data.len() / 4) {
+            let idx = 4 * i;
+            if data[idx] == 0 && data[idx + 1] == 0 && data[idx + 2] == 0 {
+                data[idx + 3] = 0;
+            } else {
+                data[idx + 3] = 255;
+            }
+        }
         $pixmaps
             .entry(stringify!($name).to_string())
             .or_insert(vec![])
@@ -121,13 +131,14 @@ macro_rules! load_images {
                         height,
                     )
                     .expect("Should be able to create texture");
+                let rx = self.border_x + self.cell * *x;
+                let ry = self.border_y + self.cell * *y;
+                let tgt = rect!(rx, ry, self.cell, self.cell);
                 texture
                     // 4 is one byte for each of RGBA
                     .update(None, rgba_data, 4 * self.cell as usize)
                     .expect("Should be able to update texture");
-                let rx = self.border_x + self.cell * *x;
-                let ry = self.border_y + self.cell * *y;
-                let tgt = rect!(rx, ry, self.cell, self.cell);
+                texture.set_blend_mode(BlendMode::Blend);
                 self.canvas
                     .copy(&texture, None, Some(tgt))
                     .expect("Should be able to copy texture to canvas");
@@ -153,6 +164,7 @@ pub struct SDLWrapper<'a> {
     // text
     font: Font<'a, 'static>,
     pixmaps: HashMap<String, Vec<resvg::tiny_skia::Pixmap>>,
+    background: resvg::tiny_skia::Pixmap,
 }
 
 impl<'a> SDLWrapper<'a> {
@@ -201,6 +213,40 @@ impl<'a> SDLWrapper<'a> {
 
         load_images!(body 8, fat 3, food 3, headturn 8, headstraight 4, lean 3, mystery 4, obstacle 3, tail 4, wall 1);
 
+        // background
+        let background_tree = resvg::usvg::Tree::from_str(
+            include_str!("images/grass01.svg"),
+            &resvg::usvg::Options::default(),
+        )
+        .expect("Should be able to parse grass SVG tree");
+        let background_resvg_tree = Tree::from_usvg(&background_tree);
+        let mut grass_pixmap = resvg::tiny_skia::Pixmap::new(cell, cell)
+            .expect("Should be able to create pixmap for grass");
+        let grass_scale = cell as f32
+            / f32::max(
+                background_resvg_tree.size.width(),
+                background_resvg_tree.size.height(),
+            );
+        background_resvg_tree.render(
+            resvg::tiny_skia::Transform::from_scale(grass_scale, grass_scale),
+            &mut grass_pixmap.as_mut(),
+        );
+        // This is a background pixmap, no need to adjust black pixels making them transparent
+        let mut background = resvg::tiny_skia::Pixmap::new(cell * FIELD_SIZE, cell * FIELD_SIZE)
+            .expect("Should be able to create background pixmap");
+        for row in 0..FIELD_SIZE {
+            for col in 0..FIELD_SIZE {
+                background.draw_pixmap(
+                    (cell * row) as i32,
+                    (cell * col) as i32,
+                    grass_pixmap.as_ref(),
+                    &PixmapPaint::default(),
+                    resvg::tiny_skia::Transform::default(),
+                    None,
+                );
+            }
+        }
+
         Self {
             events,
             border_x,
@@ -212,12 +258,40 @@ impl<'a> SDLWrapper<'a> {
             sounds,
             font,
             pixmaps,
+            background,
         }
     }
 
     pub fn clear(&mut self) {
         self.canvas.set_draw_color(Color::BLACK);
         self.canvas.clear();
+    }
+    pub fn background(&mut self) {
+        let creator = self.canvas.texture_creator();
+        let mut texture = creator
+            .create_texture(
+                Some(PixelFormatEnum::RGBA32),
+                TextureAccess::Target,
+                self.background.width(),
+                self.background.height(),
+            )
+            .expect("Should be able to create background texture");
+        texture
+            .update(
+                None,
+                self.background.data(),
+                4 * self.background.width() as usize,
+            )
+            .expect("Should be able to update background texture");
+        let tgt = rect!(
+            self.border_x + self.cell,
+            self.border_y + self.cell,
+            self.background.width(),
+            self.background.height()
+        );
+        self.canvas
+            .copy(&texture, None, Some(tgt))
+            .expect("Should be able to copy background texture to canvas");
     }
     pub fn present(&mut self) {
         self.canvas.present();

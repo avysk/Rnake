@@ -117,6 +117,8 @@ pub fn main() {
 
             sdl.clear();
 
+            sdl.background();
+
             // draw field border
             for b in 0..=(FIELD_SIZE + 1) {
                 sdl.wall(&0, &b, &0);
