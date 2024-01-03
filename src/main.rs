@@ -17,12 +17,18 @@ use world::{Direction, StepError, StepOk, Thing, World, FIELD_SIZE};
 
 #[derive(Deserialize, Serialize)]
 struct RnakeConfig {
+    chosen_level: usize,
+    last_level: usize,
     speed_index: usize,
 }
 
 impl Default for RnakeConfig {
     fn default() -> Self {
-        Self { speed_index: 1 }
+        Self {
+            chosen_level: 1,
+            last_level: 2,
+            speed_index: 1,
+        }
     }
 }
 const WAIT: Uint64 = 20;
@@ -34,32 +40,46 @@ pub fn main() {
         confy::load("Rnake", None).expect("There should be no mistakes from confy.");
 
     sdl.sounds.start();
-    let mut start = Message::new("Press SPACE to start the game.".to_string());
-    let mut speed = Choice::new(
+    let mut start_message = Message::new("Press SPACE to start the game.".to_string());
+    let mut speed_chooser = Choice::new(
         "Speed".to_string(),
         vec!["slow".to_string(), "normal".to_string(), "fast".to_string()],
         cfg.speed_index,
     );
-    let mut menu = Menu::new(vec![&mut start, &mut speed]);
+    let last = cfg.last_level;
+    let mut levels = vec![];
+    for level in 1..=last {
+        levels.push(level.to_string());
+    }
+    let mut level_chooser = Choice::new("Level".to_string(), levels, cfg.chosen_level - 1);
+    let mut menu = Menu::new(vec![
+        &mut start_message,
+        &mut speed_chooser,
+        &mut level_chooser,
+    ]);
     let result = menu.run(&mut sdl);
     match result {
         DialogReturn::Result(DialogResult::OK) => {}
         _ => exit(0),
     }
 
-    cfg.speed_index = speed.result();
+    cfg.speed_index = speed_chooser.result();
+    cfg.chosen_level = level_chooser.result() + 1;
     confy::store("Rnake", None, cfg).expect("There should be no confy error when saving config.");
-    let frame_delta = match speed.result() {
+    let play_level = level_chooser.result() + 1;
+    let frame_delta = match speed_chooser.result() {
         0 => 120,
         1 => 60,
         2 => 30,
         _ => panic!("Programming error: unknown speed level."),
     };
 
-    let mut quit_msg = "You have exited the game.";
+    'level: loop {
+        let mut quit_msg = "You have exited the game.";
 
-    'game: loop {
-        let mut w = World::init();
+        sdl.banner(format!("Level {}", play_level));
+
+        let mut w = World::init(play_level);
 
         let mut next_frame: Uint64 = 0;
         let mut turned = false;
@@ -115,7 +135,7 @@ pub fn main() {
                     quit_msg = "You have hit an obstacle.";
                     break 'running;
                 }
-                Err(StepError::OutOfField) => {
+                Err(StepError::Wall) => {
                     sdl.sounds.wall();
                     quit_msg = "You have hit the wall.";
                     break 'running;
@@ -247,6 +267,9 @@ pub fn main() {
                     Thing::Obstacle => {
                         sdl.obstacle(&t.picture_index, &t.x, &t.y);
                     }
+                    Thing::Wall => {
+                        sdl.wall(&t.picture_index, &t.x, &t.y);
+                    }
                 }
             }
 
@@ -266,10 +289,10 @@ pub fn main() {
         match result {
             DialogReturn::Result(DialogResult::OK) => {
                 sdl.sounds.start();
-                continue 'game;
+                continue 'level;
             }
             _ => {
-                break 'game;
+                break 'level;
             }
         }
     }

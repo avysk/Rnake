@@ -16,7 +16,7 @@ pub const FAT_GROW_SNAKE: u32 = 6;
 
 pub enum StepError {
     Obstacle,
-    OutOfField,
+    Wall,
     SelfHit,
 }
 
@@ -59,6 +59,7 @@ pub enum Thing {
     Lean,
     Mystery,
     Obstacle,
+    Wall,
 }
 
 #[derive(Clone, Debug)]
@@ -81,7 +82,69 @@ pub struct World {
 }
 
 impl World {
-    pub fn init() -> Self {
+    pub fn init(level: usize) -> Self {
+        if level < 1 || level > 10 {
+            panic!("Programming error: unknown level '{}'", level);
+        }
+        let mut things = vec![];
+        if level == 2 {
+            things.push(ThingInField {
+                what: Thing::Wall,
+                picture_index: 0,
+                x: 1,
+                y: FIELD_SIZE / 2,
+                lifetime: None,
+            });
+            things.push(ThingInField {
+                what: Thing::Wall,
+                picture_index: 0,
+                x: 1,
+                y: FIELD_SIZE / 2 + 1,
+                lifetime: None,
+            });
+            things.push(ThingInField {
+                what: Thing::Wall,
+                picture_index: 0,
+                y: 1,
+                x: FIELD_SIZE / 2,
+                lifetime: None,
+            });
+            things.push(ThingInField {
+                what: Thing::Wall,
+                picture_index: 0,
+                y: 1,
+                x: FIELD_SIZE / 2 + 1,
+                lifetime: None,
+            });
+            things.push(ThingInField {
+                what: Thing::Wall,
+                picture_index: 0,
+                x: FIELD_SIZE,
+                y: FIELD_SIZE / 2,
+                lifetime: None,
+            });
+            things.push(ThingInField {
+                what: Thing::Wall,
+                picture_index: 0,
+                x: FIELD_SIZE,
+                y: FIELD_SIZE / 2 + 1,
+                lifetime: None,
+            });
+            things.push(ThingInField {
+                what: Thing::Wall,
+                picture_index: 0,
+                y: FIELD_SIZE,
+                x: FIELD_SIZE / 2,
+                lifetime: None,
+            });
+            things.push(ThingInField {
+                what: Thing::Wall,
+                picture_index: 0,
+                y: FIELD_SIZE,
+                x: FIELD_SIZE / 2 + 1,
+                lifetime: None,
+            });
+        }
         let mut w = World {
             snake: vec![
                 SnakeCell {
@@ -112,7 +175,7 @@ impl World {
                     even: false,
                 },
             ],
-            things: vec![],
+            things,
             grow: 0,
             score: 0,
             eaten_food: 0,
@@ -155,28 +218,28 @@ impl World {
                 if next_y > 1 {
                     next_y -= 1;
                 } else {
-                    return Err(StepError::OutOfField);
+                    return Err(StepError::Wall);
                 }
             }
             Direction::Down => {
                 if next_y < FIELD_SIZE {
                     next_y += 1
                 } else {
-                    return Err(StepError::OutOfField);
+                    return Err(StepError::Wall);
                 }
             }
             Direction::Left => {
                 if next_x > 1 {
                     next_x -= 1;
                 } else {
-                    return Err(StepError::OutOfField);
+                    return Err(StepError::Wall);
                 }
             }
             Direction::Right => {
                 if next_x < FIELD_SIZE {
                     next_x += 1
                 } else {
-                    return Err(StepError::OutOfField);
+                    return Err(StepError::Wall);
                 }
             }
         };
@@ -236,6 +299,9 @@ impl World {
                     self.things.remove(idx - deleted);
                     deleted += 1;
                     match thing.what {
+                        Thing::Wall => {
+                            return Err(StepError::Wall);
+                        }
                         Thing::Obstacle => {
                             return Err(StepError::Obstacle);
                         }

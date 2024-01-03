@@ -27,7 +27,7 @@ impl<'a> Menu<'a> {
     // Return the index of the widget which closed the menu
     pub fn run(&mut self, sdl: &mut SDLWrapper) -> DialogReturn {
         let total = self.widgets.iter().filter(|w| w.can_activate()).count();
-        let activated = 0;
+        let mut activated = 0;
         loop {
             let mut messages = vec![];
             let mut current = 0;
@@ -38,11 +38,10 @@ impl<'a> Menu<'a> {
                 if total > 0 {
                     if w.can_activate() {
                         if activated == current {
-                            repr = "- ".to_owned() + s;
+                            repr = "- ".to_owned() + s + " -";
                             activated_index = Some(idx);
-                        } else {
-                            current += 1;
                         }
+                        current += 1;
                     }
                 }
                 messages.push(repr);
@@ -54,15 +53,15 @@ impl<'a> Menu<'a> {
                         keycode: Some(Keycode::Down),
                         ..
                     } if total > 0 => {
-                        current += 1;
-                        current %= total;
+                        activated += 1;
+                        activated %= total;
                     }
                     Event::KeyDown {
                         keycode: Some(Keycode::Up),
                         ..
                     } if total > 0 => {
-                        current += total - 1;
-                        current %= total;
+                        activated += total - 1;
+                        activated %= total;
                     }
                     Event::KeyDown {
                         keycode: Some(Keycode::Space),

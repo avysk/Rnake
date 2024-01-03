@@ -8,7 +8,7 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect;
 use sdl2::render::{BlendMode, Canvas, TextureAccess, TextureQuery};
 use sdl2::rwops::RWops;
-use sdl2::sys::{SDL_ShowCursor, SDL_DISABLE};
+use sdl2::sys::{SDL_Delay, SDL_ShowCursor, SDL_DISABLE};
 use sdl2::ttf::{Font, Sdl2TtfContext};
 use sdl2::video::Window;
 use sdl2::{pixels::Color, EventPump};
@@ -298,6 +298,12 @@ impl<'a> SDLWrapper<'a> {
     }
     pub fn window(&self) -> Option<&Window> {
         Some(self.canvas.window())
+    }
+    pub fn banner(&mut self, text: String) {
+        self.messages(&vec![text]);
+        unsafe {
+            SDL_Delay(500);
+        }
     }
     pub fn messages(&mut self, messages: &Vec<String>) {
         self.clear();
