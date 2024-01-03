@@ -1,6 +1,6 @@
 use rand::{distributions::Uniform, Rng};
 
-pub const FIELD_SIZE: u32 = 30;
+pub const FIELD_SIZE: u32 = 20;
 pub const FOOD_LIFETIME: u32 = 60;
 pub const OBSTACLE_LIFETIME: u32 = 60;
 pub const OBSTACLE_P: f32 = 0.015;
