@@ -9,24 +9,36 @@ use std::process::exit;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
+use serde::{Deserialize, Serialize};
 
 use crate::widgets::{Choice, DialogResult, DialogReturn, Menu, Message, Widget};
 use sdlwrapper::SDLWrapper;
 use world::{Direction, StepError, StepOk, Thing, World, FIELD_SIZE};
 
-// update screen after the given number of SDL ticks
+#[derive(Deserialize, Serialize)]
+struct RnakeConfig {
+    speed_index: usize,
+}
+
+impl Default for RnakeConfig {
+    fn default() -> Self {
+        Self { speed_index: 1 }
+    }
+}
 const WAIT: Uint64 = 20;
 
 pub fn main() {
     let ttf_context = sdl2::ttf::init().expect("Should be able to construct TTF context");
     let mut sdl = SDLWrapper::new(&FIELD_SIZE, &ttf_context);
+    let mut cfg: RnakeConfig =
+        confy::load("Rnake", None).expect("There should be no mistakes from confy.");
 
     sdl.sounds.start();
     let mut start = Message::new("Press SPACE to start the game.".to_string());
     let mut speed = Choice::new(
         "Speed".to_string(),
         vec!["slow".to_string(), "normal".to_string(), "fast".to_string()],
-        1,
+        cfg.speed_index,
     );
     let mut menu = Menu::new(vec![&mut start, &mut speed]);
     let result = menu.run(&mut sdl);
@@ -34,6 +46,9 @@ pub fn main() {
         DialogReturn::Result(DialogResult::OK) => {}
         _ => exit(0),
     }
+
+    cfg.speed_index = speed.result();
+    confy::store("Rnake", None, cfg).expect("There should be no confy error when saving config.");
     let frame_delta = match speed.result() {
         0 => 120,
         1 => 60,
