@@ -39,7 +39,7 @@ macro_rules! with_sounds {
                 let queue = system
                     .open_queue::<i16, Option<&str>>(None, &spec)
                     .expect("Should be able to open AudioQueue");
-                $(let $sound = Vec::from(*include_bytes!(concat!("sounds/", stringify!($sound), ".wav")));)*
+                $(let $sound = Vec::from(*include_bytes!(concat!("resources/sounds/", stringify!($sound), ".wav")));)*
                 Box::new(Sounds {
                     queue,
                     $($sound),*

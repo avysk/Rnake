@@ -1,0 +1,88 @@
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+
+use crate::sdlwrapper::SDLWrapper;
+use crate::widgets::Widget;
+
+#[derive(Clone, Copy)]
+pub enum DialogResult {
+    OK,
+    CANCEL,
+}
+
+pub enum DialogReturn {
+    Result(DialogResult),
+    Index(usize),
+}
+
+pub struct Menu<'a> {
+    widgets: Vec<&'a mut dyn Widget>,
+}
+
+impl<'a> Menu<'a> {
+    pub fn new(widgets: Vec<&'a mut dyn Widget>) -> Self {
+        Self { widgets }
+    }
+
+    // Return the index of the widget which closed the menu
+    pub fn run(&mut self, sdl: &mut SDLWrapper) -> DialogReturn {
+        let total = self.widgets.iter().filter(|w| w.can_activate()).count();
+        let activated = 0;
+        loop {
+            let mut messages = vec![];
+            let mut current = 0;
+            for w in self.widgets.iter() {
+                let s = w.present();
+                let mut repr = s.to_string();
+                if total > 0 {
+                    if w.can_activate() {
+                        if activated == current {
+                            repr = "> ".to_owned() + s;
+                        } else {
+                            current += 1;
+                        }
+                    }
+                }
+                messages.push(repr);
+            }
+            sdl.messages(&messages);
+            for event in sdl.events.poll_iter() {
+                match event {
+                    Event::KeyDown {
+                        keycode: Some(Keycode::Down),
+                        ..
+                    } if total > 0 => {
+                        current += 1;
+                        current %= total;
+                    }
+                    Event::KeyDown {
+                        keycode: Some(Keycode::Up),
+                        ..
+                    } if total > 0 => {
+                        current += total - 1;
+                        current %= total;
+                    }
+                    Event::KeyDown {
+                        keycode: Some(Keycode::Space),
+                        ..
+                    } if total == 0 => {
+                        return DialogReturn::Result(DialogResult::OK);
+                    }
+                    Event::KeyDown {
+                        keycode: Some(Keycode::Escape),
+                        ..
+                    } => {
+                        return DialogReturn::Result(DialogResult::CANCEL);
+                    }
+                    _ if total > 0 => {
+                        let result = self.widgets[activated].feed(event);
+                        if result {
+                            return DialogReturn::Index(activated);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+}

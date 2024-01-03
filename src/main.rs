@@ -1,13 +1,16 @@
 mod sdlwrapper;
 mod sound;
+mod widgets;
 mod world;
 
 use std::cmp::min;
+use std::process::exit;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
 
+use crate::widgets::{DialogResult, DialogReturn, Menu, Message};
 use sdlwrapper::SDLWrapper;
 use world::{Direction, StepError, StepOk, Thing, World, FIELD_SIZE};
 
@@ -20,21 +23,12 @@ pub fn main() {
     let mut sdl = SDLWrapper::new(&FIELD_SIZE, &ttf_context);
 
     sdl.sounds.start();
-    sdl.messages(vec!["Press SPACE to start the game"]);
-    'waiting_start: loop {
-        for event in sdl.events.poll_iter() {
-            match event {
-                Event::KeyDown {
-                    keycode: Some(Keycode::Space),
-                    ..
-                } => {
-                    break 'waiting_start;
-                }
-                _ => unsafe {
-                    SDL_Delay(100);
-                },
-            }
-        }
+    let mut start = Message::new("Press SPACE to start the game.".to_string());
+    let mut menu = Menu::new(vec![&mut start]);
+    let result = menu.run(&mut sdl);
+    match result {
+        DialogReturn::Result(DialogResult::OK) => {}
+        _ => exit(0),
     }
 
     let mut quit_msg = "You have exited the game.";
@@ -237,33 +231,20 @@ pub fn main() {
             next_frame = unsafe { SDL_GetTicks64() } + FRAME_DELTA;
             turned = false;
         }
-        sdl.messages(vec![
-            quit_msg,
-            "Game over.",
-            format!("Score {}.", w.score).as_ref(),
-            "Press SPACE to play again,",
-            "ESC to exit.",
-        ]);
-        loop {
-            for event in sdl.events.poll_iter() {
-                match event {
-                    Event::KeyDown {
-                        keycode: Some(Keycode::Space),
-                        ..
-                    } => {
-                        sdl.sounds.start();
-                        continue 'game;
-                    }
-                    Event::KeyDown {
-                        keycode: Some(Keycode::Escape),
-                        ..
-                    } => {
-                        break 'game;
-                    }
-                    _ => unsafe {
-                        SDL_Delay(100);
-                    },
-                }
+        let mut w1 = Message::new(quit_msg.to_string());
+        let mut w2 = Message::new("Game over.".to_string());
+        let mut w3 = Message::new(format!("Score {}.", w.score));
+        let mut w4 = Message::new("Press SPACE to play again,".to_string());
+        let mut w5 = Message::new("ESC to exit.".to_string());
+        let mut menu = Menu::new(vec![&mut w1, &mut w2, &mut w3, &mut w4, &mut w5]);
+        let result = menu.run(&mut sdl);
+        match result {
+            DialogReturn::Result(DialogResult::OK) => {
+                sdl.sounds.start();
+                continue 'game;
+            }
+            _ => {
+                break 'game;
             }
         }
     }

@@ -24,12 +24,12 @@ macro_rules! rect {
 }
 
 /// This macro creates resvg::tiny_skia::Pixmap of the given size, renders on it image from
-/// images/, and pushes the pixmap to a vector in a given hashmap.
+/// resources/images/, and pushes the pixmap to a vector in a given hashmap.
 macro_rules! load_one_image {
     ($cell:expr, $pixmaps:ident, $name:ident $num:literal) => {{
         let tree = resvg::usvg::Tree::from_str(
             include_str!(concat!(
-                "images/",
+                "resources/images/",
                 stringify!($name),
                 "0",
                 stringify!($num),
@@ -203,7 +203,7 @@ impl<'a> SDLWrapper<'a> {
         let sounds = Sounds::create(maybe_audio_subsystem);
 
         // Fonts
-        let rwops = RWops::from_bytes(include_bytes!("fonts/Aclonica.ttf"))
+        let rwops = RWops::from_bytes(include_bytes!("resources/fonts/Aclonica.ttf"))
             .expect("Should be able to load rwops from font bytes.");
         let font = context
             .load_font_from_rwops(rwops, 72)
@@ -215,7 +215,7 @@ impl<'a> SDLWrapper<'a> {
 
         // background
         let background_tree = resvg::usvg::Tree::from_str(
-            include_str!("images/grass01.svg"),
+            include_str!("resources/images/grass01.svg"),
             &resvg::usvg::Options::default(),
         )
         .expect("Should be able to parse grass SVG tree");
@@ -299,7 +299,7 @@ impl<'a> SDLWrapper<'a> {
     pub fn window(&self) -> Option<&Window> {
         Some(self.canvas.window())
     }
-    pub fn messages(&mut self, messages: Vec<&str>) {
+    pub fn messages(&mut self, messages: &Vec<String>) {
         self.clear();
         let surfaces = messages.iter().map(|line| {
             self.font
