@@ -37,6 +37,7 @@ pub fn main() {
     let mut cfg: RnakeConfig =
         confy::load("Rnake", None).expect("There should be no mistakes from confy.");
 
+    sdl.sounds.play_music();
     sdl.sounds.start();
     let mut start_message = Message::new("Press SPACE to start the game.".to_string());
     let mut speed_chooser = Choice::new(

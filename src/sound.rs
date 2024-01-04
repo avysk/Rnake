@@ -1,64 +1,65 @@
-use sdl2::{audio, audio::AudioSpecDesired, sys::SDL_Delay, AudioSubsystem};
+use sdl2::mixer::{Channel, Chunk, Music, DEFAULT_CHANNELS, DEFAULT_FORMAT, DEFAULT_FREQUENCY};
+use std::collections::HashMap;
 
 struct NoSound;
+
+pub struct Sounds {
+    chunks: HashMap<String, Chunk>,
+    music: Music<'static>,
+}
 
 macro_rules! with_sounds {
     ($($sound:ident)*) => {
         pub trait Player {
+            fn play_music(&self) {}
             $(fn $sound(&self) {})*
         }
 
         impl Player for NoSound {
+            fn play_music(&self) {
+                // no sound, do nothing
+            }
             $(fn $sound(&self) {
                 // no sound, do nothing
             })*
         }
 
-        #[repr(align(2))]
-        pub struct Sounds {
-            queue: audio::AudioQueue<i16>,
-            $($sound: Vec<u8>),*
-        }
-
         impl Player for Sounds {
+            fn play_music(&self) {
+                self.music.play(-1).expect("Sound is supported, should be able to play music");
+            }
             $(fn $sound(&self) {
-                self.queue.queue_audio(bytemuck::cast_slice::<u8, i16>(self.$sound.as_slice()))
-                    .expect("Should be able to queue audio");
-                self.queue.resume();
+                Channel(-1).play(&self.chunks[stringify!($sound)], 0).expect("Should be able to play sound");
             })*
         }
 
         impl Sounds {
-            pub fn create(maybe_system: Result<AudioSubsystem, String>) -> Box<dyn Player> {
-                if let Ok(system) = maybe_system {
-                let spec = AudioSpecDesired {
-                    freq: None,
-                    channels: Some(1u8),
-                    samples: None,
-                };
-                let queue = system
-                    .open_queue::<i16, Option<&str>>(None, &spec)
-                    .expect("Should be able to open AudioQueue");
-                $(let $sound = Vec::from(*include_bytes!(concat!("resources/sounds/", stringify!($sound), ".wav")));)*
-                Box::new(Sounds {
-                    queue,
-                    $($sound),*
-                }) } else { // no audiosystem
-                    Box::new(NoSound {})
+            pub fn create() -> Box<dyn Player> {
+                let mix = sdl2::mixer::init(sdl2::mixer::InitFlag::all());
+                if mix.is_err() {
+                    return Box::new(NoSound {});
                 }
+                let audio = sdl2::mixer::open_audio(
+                    DEFAULT_FREQUENCY,
+                    DEFAULT_FORMAT,
+                    DEFAULT_CHANNELS,
+                    512
+                );
+                if audio.is_err() {
+                    panic!("SDL2 mixer init succeeded, should be able to open audio");
+                }
+                sdl2::mixer::allocate_channels(4);
+                let music = sdl2::mixer::Music::from_static_bytes(include_bytes!("resources/sounds/kim-lightyear-just-a-dream-wake-up.wav")).expect("Should be able to create music");
+                let mut chunks = HashMap::new();
+                $(let $sound = sdl2::mixer::Chunk::from_raw_buffer(Box::new(*include_bytes!(concat!("resources/sounds/", stringify!($sound), ".wav")))).expect("Should be able to create chunk");
+                  chunks.insert(stringify!($sound).to_string(), $sound);)*
+                Box::new(Sounds {
+                    music,
+                    chunks
+                })
             }
         }
     }
 }
 
 with_sounds!(boom food mystery obstacle start wall);
-
-impl Drop for Sounds {
-    fn drop(&mut self) {
-        while self.queue.size() > 0 {
-            unsafe {
-                SDL_Delay(20);
-            }
-        }
-    }
-}

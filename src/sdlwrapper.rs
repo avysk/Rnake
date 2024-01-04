@@ -199,8 +199,7 @@ impl<'a> SDLWrapper<'a> {
         let border_y = (window_size.1 - cell * field_plus_wall) / 2;
 
         // Sounds
-        let maybe_audio_subsystem = sdl_context.audio();
-        let sounds = Sounds::create(maybe_audio_subsystem);
+        let sounds = Sounds::create();
 
         // Fonts
         let rwops = RWops::from_bytes(include_bytes!("resources/fonts/Aclonica.ttf"))
