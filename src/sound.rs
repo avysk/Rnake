@@ -48,11 +48,13 @@ macro_rules! with_sounds {
                 if audio.is_err() {
                     panic!("SDL2 mixer init succeeded, should be able to open audio");
                 }
-                sdl2::mixer::allocate_channels(4);
+                sdl2::mixer::allocate_channels(8);
                 let music = sdl2::mixer::Music::from_static_bytes(include_bytes!("resources/sounds/kim-lightyear-just-a-dream-wake-up.wav")).expect("Should be able to create music");
                 let mut chunks = HashMap::new();
-                $(let $sound = sdl2::mixer::Chunk::from_raw_buffer(Box::new(*include_bytes!(concat!("resources/sounds/", stringify!($sound), ".wav")))).expect("Should be able to create chunk");
-                  chunks.insert(stringify!($sound).to_string(), $sound);)*
+                $(
+                let $sound = sdl2::mixer::Chunk::from_raw_buffer(Box::new(*include_bytes!(concat!("resources/sounds/", stringify!($sound), ".wav")))).expect("Should be able to create chunk");
+                chunks.insert(stringify!($sound).to_string(), $sound);
+                    )*
                 Box::new(Sounds {
                     music,
                     chunks

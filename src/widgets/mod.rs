@@ -4,6 +4,7 @@ mod core;
 mod menu;
 mod message;
 
+pub use action::Action;
 pub use choice::Choice;
 pub use core::Widget;
 pub use menu::DialogResult;
