@@ -46,7 +46,7 @@ macro_rules! with_sounds {
                     512
                 );
                 if audio.is_err() {
-                    panic!("SDL2 mixer init succeeded, should be able to open audio");
+                    return Box::new(NoSound {});
                 }
                 sdl2::mixer::allocate_channels(8);
                 let music = sdl2::mixer::Music::from_static_bytes(include_bytes!("resources/sounds/kim-lightyear-just-a-dream-wake-up.wav")).expect("Should be able to create music");
