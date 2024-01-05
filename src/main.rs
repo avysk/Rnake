@@ -1,3 +1,4 @@
+mod config;
 mod sdlwrapper;
 mod sound;
 mod widgets;
@@ -8,28 +9,11 @@ use std::process::exit;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
-use serde::{Deserialize, Serialize};
 
-use crate::widgets::{Choice, DialogResult, DialogReturn, Menu, Message, Widget};
+use crate::config::{config_dialog, RnakeConfig};
+use crate::widgets::{Action, DialogResult, DialogReturn, Menu, Message};
 use sdlwrapper::SDLWrapper;
 use world::{Direction, StepError, StepOk, Thing, World, FIELD_SIZE};
-
-#[derive(Deserialize, Serialize)]
-struct RnakeConfig {
-    chosen_level: usize,
-    last_level: usize,
-    speed_index: usize,
-}
-
-impl Default for RnakeConfig {
-    fn default() -> Self {
-        Self {
-            chosen_level: 1,
-            last_level: 2,
-            speed_index: 1,
-        }
-    }
-}
 
 pub fn main() {
     let ttf_context = sdl2::ttf::init().expect("Should be able to construct TTF context");
@@ -39,34 +23,34 @@ pub fn main() {
 
     sdl.sounds.play_music();
     sdl.sounds.start();
-    let mut start_message = Message::new("Press SPACE to start the game.".to_string());
-    let mut speed_chooser = Choice::new(
-        "Speed".to_string(),
-        vec!["slow".to_string(), "normal".to_string(), "fast".to_string()],
-        cfg.speed_index,
-    );
-    let last = cfg.last_level;
-    let mut levels = vec![];
-    for level in 1..=last {
-        levels.push(level.to_string());
-    }
-    let mut level_chooser = Choice::new("Level".to_string(), levels, cfg.chosen_level - 1);
+    let mut start_game = Action::new("Start the game".to_string());
+    let mut exit_game = Action::new("Exit".to_string());
+    let mut esc_message = Message::new("You can also press ESC to exit".to_string());
+    let mut options = Action::new("Options".to_string());
     let mut menu = Menu::new(vec![
-        &mut start_message,
-        &mut speed_chooser,
-        &mut level_chooser,
+        &mut start_game,
+        &mut exit_game,
+        &mut esc_message,
+        &mut options,
     ]);
-    let result = menu.run(&mut sdl);
-    match result {
-        DialogReturn::Result(DialogResult::OK) => {}
-        _ => exit(0),
+    'start_menu: loop {
+        match menu.run(&mut sdl) {
+            DialogReturn::Index(0) => {
+                break 'start_menu;
+            }
+            DialogReturn::Index(1) | DialogReturn::Result(DialogResult::Cancel) => {
+                exit(0);
+            }
+            DialogReturn::Index(3) => {
+                config_dialog(&mut cfg, &mut sdl);
+            }
+            _ => panic!("Programming error: unknown return from start menu"),
+        }
     }
-
-    cfg.speed_index = speed_chooser.result();
-    cfg.chosen_level = level_chooser.result() + 1;
-    confy::store("Rnake", None, cfg).expect("There should be no confy error when saving config.");
-    let play_level = level_chooser.result() + 1;
-    let frame_delta = match speed_chooser.result() {
+    confy::store("Rnake", None, cfg.clone())
+        .expect("There should be no confy error when saving config.");
+    let play_level = cfg.chosen_level;
+    let frame_delta = match cfg.speed_index {
         0 => 180,
         1 => 120,
         2 => 90,
@@ -282,7 +266,7 @@ pub fn main() {
         let mut menu = Menu::new(vec![&mut w1, &mut w2, &mut w3, &mut w4, &mut w5]);
         let result = menu.run(&mut sdl);
         match result {
-            DialogReturn::Result(DialogResult::OK) => {
+            DialogReturn::Result(DialogResult::Ok) => {
                 sdl.sounds.start();
                 continue 'level;
             }

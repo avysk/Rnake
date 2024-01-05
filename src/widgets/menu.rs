@@ -7,8 +7,8 @@ use crate::widgets::Widget;
 
 #[derive(Clone, Copy)]
 pub enum DialogResult {
-    OK,
-    CANCEL,
+    Ok,
+    Cancel,
 }
 
 pub enum DialogReturn {
@@ -76,19 +76,20 @@ impl<'a> Menu<'a> {
                         activated += total - 1;
                         activated %= total;
                     }
+                    // SPACE works only if there is no widgets which can be activated
                     Event::KeyDown {
                         keycode: Some(Keycode::Space),
                         ..
-                    } => {
+                    } if total == 0 => {
                         self.click();
-                        return DialogReturn::Result(DialogResult::OK);
+                        return DialogReturn::Result(DialogResult::Ok);
                     }
                     Event::KeyDown {
                         keycode: Some(Keycode::Escape),
                         ..
                     } => {
                         self.click();
-                        return DialogReturn::Result(DialogResult::CANCEL);
+                        return DialogReturn::Result(DialogResult::Cancel);
                     }
                     Event::KeyDown { .. } if total > 0 => {
                         self.click();
