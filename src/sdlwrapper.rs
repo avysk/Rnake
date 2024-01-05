@@ -204,8 +204,9 @@ impl<'a> SDLWrapper<'a> {
         // Fonts
         let rwops = RWops::from_bytes(include_bytes!("resources/fonts/Aclonica.ttf"))
             .expect("Should be able to load rwops from font bytes.");
+        let font_size = if window_size.0 >= 1536 { 72 } else { 36 };
         let font = context
-            .load_font_from_rwops(rwops, 72)
+            .load_font_from_rwops(rwops, font_size)
             .expect("Should be able to load font from rwops.");
 
         let pixmaps = create_pixmaps(&cell);
@@ -324,10 +325,16 @@ impl<'a> SDLWrapper<'a> {
             .window()
             .expect("Should be able to get window corresponding to the texture")
             .size();
+        if total_height >= win_height {
+            panic!("Too many messages");
+        }
         let mut pad_h = (win_height - total_height) / 2;
 
         for texture in textures {
             let TextureQuery { width, height, .. } = texture.query();
+            if width >= win_width {
+                panic!("Too long message");
+            }
             let tgt = rect!((win_width - width) / 2, pad_h, width, height);
             self.canvas
                 .copy(&texture, None, Some(tgt))
