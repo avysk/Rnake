@@ -376,7 +376,6 @@ dependencies = [
 name = "rnake"
 version = "4.0.0"
 dependencies = [
- "bytemuck",
  "confy",
  "rand",
  "resvg",
