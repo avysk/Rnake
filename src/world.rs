@@ -83,7 +83,7 @@ pub struct World {
 
 impl World {
     pub fn init(level: usize) -> Self {
-        if level < 1 || level > 10 {
+        if !(1..=10).contains(&level) {
             panic!("Programming error: unknown level '{}'", level);
         }
         let mut things = vec![];

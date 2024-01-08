@@ -10,7 +10,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::sys::{SDL_Delay, SDL_GetTicks64, Uint32, Uint64};
 
-use crate::config::{config_dialog, RnakeConfig};
+use crate::config::Configuration;
 use crate::widgets::{Action, DialogResult, DialogReturn, Menu, Message};
 use sdlwrapper::SDLWrapper;
 use world::{Direction, StepError, StepOk, Thing, World, FIELD_SIZE};
@@ -18,37 +18,32 @@ use world::{Direction, StepError, StepOk, Thing, World, FIELD_SIZE};
 pub fn main() {
     let ttf_context = sdl2::ttf::init().expect("Should be able to construct TTF context");
     let mut sdl = SDLWrapper::new(&FIELD_SIZE, &ttf_context);
-    let mut cfg: RnakeConfig =
-        confy::load("Rnake", None).expect("There should be no mistakes from confy.");
+    let mut cfg = Configuration::new();
 
-    sdl.sounds.play_music();
-    sdl.sounds.start();
     let mut start_game = Action::new("Start the game".to_string());
     let mut exit_game = Action::new("Exit".to_string());
     let mut esc_message = Message::new("You can also press ESC to exit".to_string());
     let mut options = Action::new("Options".to_string());
     let mut menu = Menu::new(vec![
         &mut start_game,
+        &mut options,
         &mut exit_game,
         &mut esc_message,
-        &mut options,
     ]);
     'start_menu: loop {
         match menu.run(&mut sdl) {
             DialogReturn::Index(0) => {
                 break 'start_menu;
             }
-            DialogReturn::Index(1) | DialogReturn::Result(DialogResult::Cancel) => {
-                exit(0);
+            DialogReturn::Index(1) => {
+                cfg.config_dialog(&mut sdl);
             }
-            DialogReturn::Index(3) => {
-                config_dialog(&mut cfg, &mut sdl);
+            DialogReturn::Index(2) | DialogReturn::Result(DialogResult::Cancel) => {
+                exit(0);
             }
             _ => panic!("Programming error: unknown return from start menu"),
         }
     }
-    confy::store("Rnake", None, cfg.clone())
-        .expect("There should be no confy error when saving config.");
     let play_level = cfg.chosen_level;
     let frame_delta = match cfg.speed_index {
         0 => 180,
@@ -57,6 +52,8 @@ pub fn main() {
         _ => panic!("Programming error: unknown speed level."),
     };
 
+    sdl.sounds.play_music();
+    sdl.sounds.start();
     'level: loop {
         let mut quit_msg = "You have exited the game.";
 

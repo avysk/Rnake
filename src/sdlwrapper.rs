@@ -13,7 +13,7 @@ use sdl2::ttf::{Font, Sdl2TtfContext};
 use sdl2::video::Window;
 use sdl2::{pixels::Color, EventPump};
 
-use crate::sound::{Player, Sounds};
+use crate::sound::{Sound, SoundPlayer};
 use crate::world::FIELD_SIZE;
 
 /// This macro creates SDL2 Rect, casting the arguments to the appropriate types
@@ -160,7 +160,7 @@ pub struct SDLWrapper<'a> {
     cell: u32,
     canvas: Canvas<Window>,
     // sound player
-    pub sounds: Box<dyn Player>,
+    pub sounds: Box<dyn SoundPlayer>,
     // text
     font: Font<'a, 'static>,
     pixmaps: HashMap<String, Vec<resvg::tiny_skia::Pixmap>>,
@@ -199,7 +199,7 @@ impl<'a> SDLWrapper<'a> {
         let border_y = (window_size.1 - cell * field_plus_wall) / 2;
 
         // Sounds
-        let sounds = Sounds::create();
+        let sounds = Sound::create();
 
         // Fonts
         let rwops = RWops::from_bytes(include_bytes!("resources/fonts/Aclonica.ttf"))
