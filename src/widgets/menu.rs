@@ -5,6 +5,8 @@ use sdl2::mixer::Channel;
 use crate::sdlwrapper::SDLWrapper;
 use crate::widgets::Widget;
 
+pub static mut MENU_SOUND_LEVEL: usize = 8;
+
 #[derive(Clone, Copy)]
 pub enum DialogResult {
     Ok,
@@ -29,7 +31,16 @@ impl<'a> Menu<'a> {
         Self { click, widgets }
     }
 
-    pub fn click(&self) {
+    fn click(&mut self) {
+        if self.click.is_err() {
+            return;
+        }
+        unsafe {
+            self.click
+                .as_mut()
+                .expect("Programming error: cannot get an error here")
+                .set_volume(16 * MENU_SOUND_LEVEL as i32);
+        }
         if let Ok(chunk) = &self.click {
             Channel(1)
                 .play(chunk, 0)
@@ -64,7 +75,9 @@ impl<'a> Menu<'a> {
                         keycode: Some(Keycode::Down),
                         ..
                     } if total > 0 => {
-                        self.click();
+                        if sdl.sounds.sound_enabled() {
+                            self.click();
+                        }
                         activated += 1;
                         activated %= total;
                     }
@@ -72,7 +85,9 @@ impl<'a> Menu<'a> {
                         keycode: Some(Keycode::Up),
                         ..
                     } if total > 0 => {
-                        self.click();
+                        if sdl.sounds.sound_enabled() {
+                            self.click();
+                        }
                         activated += total - 1;
                         activated %= total;
                     }
@@ -81,18 +96,24 @@ impl<'a> Menu<'a> {
                         keycode: Some(Keycode::Space),
                         ..
                     } if total == 0 => {
-                        self.click();
+                        if sdl.sounds.sound_enabled() {
+                            self.click();
+                        }
                         return DialogReturn::Result(DialogResult::Ok);
                     }
                     Event::KeyDown {
                         keycode: Some(Keycode::Escape),
                         ..
                     } => {
-                        self.click();
+                        if sdl.sounds.sound_enabled() {
+                            self.click();
+                        }
                         return DialogReturn::Result(DialogResult::Cancel);
                     }
                     Event::KeyDown { .. } if total > 0 => {
-                        self.click();
+                        if sdl.sounds.sound_enabled() {
+                            self.click();
+                        }
                         let number = activated_index
                             .expect("Programming error: there should be an activated widget.");
                         let result = self.widgets[number].feed(event);

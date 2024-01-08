@@ -2,22 +2,21 @@ use crate::widgets::Widget;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
-pub struct Choice {
+pub struct Choice<'a> {
     name: String,
-    content: Vec<String>,
+    content: &'a Vec<String>,
     chosen: usize,
     presentation: String,
 }
 
-impl Choice {
-    pub fn new(name: String, content: Vec<String>, chosen: usize) -> Self {
+impl<'a> Choice<'a> {
+    pub fn new(name: String, content: &'a Vec<String>, chosen: usize) -> Self {
         let name1 = name.clone();
-        let content1 = content.clone();
         Self {
             name,
             content,
             chosen,
-            presentation: format!("{} > {} <", name1, content1[chosen]),
+            presentation: format!("{} > {} <", name1, content[chosen]),
         }
     }
     fn update_presentation(&mut self) {
@@ -25,7 +24,7 @@ impl Choice {
     }
 }
 
-impl Widget for Choice {
+impl<'a> Widget for Choice<'a> {
     fn can_activate(&self) -> bool {
         true
     }

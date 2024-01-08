@@ -26,16 +26,15 @@ impl Widget for Action {
     }
 
     fn feed(&mut self, event: Event) -> bool {
-        return match event {
+        matches!(
+            event,
             Event::KeyDown {
                 keycode: Some(Keycode::Return),
                 ..
-            }
-            | Event::KeyDown {
+            } | Event::KeyDown {
                 keycode: Some(Keycode::Space),
                 ..
-            } => true,
-            _ => false,
-        };
+            }
+        )
     }
 }
