@@ -16,6 +16,10 @@ use sdl2::{pixels::Color, EventPump};
 use crate::sound::{Sound, SoundPlayer};
 use crate::world::FIELD_SIZE;
 
+const TRANSPARENT_RED: u8 = 0xD0;
+const TRANSPARENT_GREEN: u8 = 0x50;
+const TRANSPARENT_BLUE: u8 = 0xF0;
+
 /// This macro creates SDL2 Rect, casting the arguments to the appropriate types
 macro_rules! rect {
     ($x:expr, $y:expr, $w:expr, $h:expr) => {
@@ -50,10 +54,11 @@ macro_rules! load_one_image {
         let data = pixmap.data_mut();
         for i in 0..(data.len() / 4) {
             let idx = 4 * i;
-            if data[idx] == 0 && data[idx + 1] == 0 && data[idx + 2] == 0 {
+            if data[idx] == TRANSPARENT_RED
+                && data[idx + 1] == TRANSPARENT_GREEN
+                && data[idx + 2] == TRANSPARENT_BLUE
+            {
                 data[idx + 3] = 0;
-            } else {
-                data[idx + 3] = 255;
             }
         }
         $pixmaps
@@ -231,7 +236,7 @@ impl<'a> SDLWrapper<'a> {
             resvg::tiny_skia::Transform::from_scale(grass_scale, grass_scale),
             &mut grass_pixmap.as_mut(),
         );
-        // This is a background pixmap, no need to adjust black pixels making them transparent
+        // This is a background pixmap, no need to adjust transparent pixels making them transparent
         let mut background = resvg::tiny_skia::Pixmap::new(cell * FIELD_SIZE, cell * FIELD_SIZE)
             .expect("Should be able to create background pixmap");
         for row in 0..FIELD_SIZE {
