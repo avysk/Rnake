@@ -34,7 +34,7 @@ pub enum Direction {
     Right,
 }
 
-const SNAKE_INIT_X: u32 = FIELD_SIZE / 2;
+const SNAKE_INIT_X: u32 = FIELD_SIZE / 4;
 const SNAKE_INIT_Y: u32 = FIELD_SIZE / 2;
 const SNAKE_INIT_DIR: Direction = Direction::Up;
 
@@ -87,64 +87,66 @@ impl World {
             panic!("Programming error: unknown level '{}'", level);
         }
         let mut things = vec![];
-        if level == 2 {
+        let wall_coords: Vec<(u32, u32)> = match level {
+            2 => {
+                vec![
+                    (1, FIELD_SIZE / 2),
+                    (1, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2, 1),
+                    (FIELD_SIZE / 2 + 1, 1),
+                    (FIELD_SIZE, FIELD_SIZE / 2),
+                    (FIELD_SIZE, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2, FIELD_SIZE),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE),
+                ]
+            }
+            3 => {
+                vec![
+                    (FIELD_SIZE / 2, FIELD_SIZE / 2),
+                    (FIELD_SIZE / 2 - 1, FIELD_SIZE / 2),
+                    (FIELD_SIZE / 2 - 2, FIELD_SIZE / 2),
+                    (FIELD_SIZE / 2 - 3, FIELD_SIZE / 2),
+                    (FIELD_SIZE / 2, FIELD_SIZE / 2 - 1),
+                    (FIELD_SIZE / 2, FIELD_SIZE / 2 - 2),
+                    (FIELD_SIZE / 2, FIELD_SIZE / 2 - 3),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE / 2),
+                    (FIELD_SIZE / 2 + 2, FIELD_SIZE / 2),
+                    (FIELD_SIZE / 2 + 3, FIELD_SIZE / 2),
+                    (FIELD_SIZE / 2 + 4, FIELD_SIZE / 2),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE / 2 - 1),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE / 2 - 2),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE / 2 - 3),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2 + 2, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2 + 3, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2 + 4, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE / 2 + 2),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE / 2 + 3),
+                    (FIELD_SIZE / 2 + 1, FIELD_SIZE / 2 + 4),
+                    (FIELD_SIZE / 2, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2 - 1, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2 - 2, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2 - 3, FIELD_SIZE / 2 + 1),
+                    (FIELD_SIZE / 2, FIELD_SIZE / 2 + 2),
+                    (FIELD_SIZE / 2, FIELD_SIZE / 2 + 3),
+                    (FIELD_SIZE / 2, FIELD_SIZE / 2 + 4),
+                ]
+            }
+            _ => {
+                vec![]
+            }
+        };
+
+        for (x, y) in wall_coords {
             things.push(ThingInField {
                 what: Thing::Wall,
                 picture_index: 0,
-                x: 1,
-                y: FIELD_SIZE / 2,
-                lifetime: None,
-            });
-            things.push(ThingInField {
-                what: Thing::Wall,
-                picture_index: 0,
-                x: 1,
-                y: FIELD_SIZE / 2 + 1,
-                lifetime: None,
-            });
-            things.push(ThingInField {
-                what: Thing::Wall,
-                picture_index: 0,
-                y: 1,
-                x: FIELD_SIZE / 2,
-                lifetime: None,
-            });
-            things.push(ThingInField {
-                what: Thing::Wall,
-                picture_index: 0,
-                y: 1,
-                x: FIELD_SIZE / 2 + 1,
-                lifetime: None,
-            });
-            things.push(ThingInField {
-                what: Thing::Wall,
-                picture_index: 0,
-                x: FIELD_SIZE,
-                y: FIELD_SIZE / 2,
-                lifetime: None,
-            });
-            things.push(ThingInField {
-                what: Thing::Wall,
-                picture_index: 0,
-                x: FIELD_SIZE,
-                y: FIELD_SIZE / 2 + 1,
-                lifetime: None,
-            });
-            things.push(ThingInField {
-                what: Thing::Wall,
-                picture_index: 0,
-                y: FIELD_SIZE,
-                x: FIELD_SIZE / 2,
-                lifetime: None,
-            });
-            things.push(ThingInField {
-                what: Thing::Wall,
-                picture_index: 0,
-                y: FIELD_SIZE,
-                x: FIELD_SIZE / 2 + 1,
+                x,
+                y,
                 lifetime: None,
             });
         }
+
         let mut w = World {
             snake: vec![
                 SnakeCell {
